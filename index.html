@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <title>测试</title>
+        <style>
+
+
+        </style>
+        <link rel="stylesheet" type="text/css" href="easyui/themes/default/easyui.css">
+        <link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
+        <link rel="stylesheet" type="text/css" href="demo.css">
+        <script type="text/javascript" src="jquery1.83.js"></script>
+        <script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
+        <script>
+
+    
+        </script>
+    </head>
+
+    <body>
+        <h2>滑动条 - Slider</h2>
+        <div class="demo-info">
+            <div class="demo-tip icon-tip"></div>
+            <div>拖动滑动条来改变字体大小。<br>
+            </div>  
+        </div>
+
+        <div style="margin-top:20px;">
+            <input id="ss" class="easyui-slider" value="12" style="width:300px" data-options="
+                   showTip:true,
+                   rule: [0,'|',25,'|',50,'|',75,'|',100],
+                   tipFormatter: function(value){
+                   return value+'px';
+                   },
+                   onChange: function(value){
+                   $('#ff').css('font-size', value);
+                   }">
+        </div>
+        <div id="ff" style="margin-top:50px;font-size:12px">jQuery EasyUI</div>
+    </body>
+
+</body>
+</html>
