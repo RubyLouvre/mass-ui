@@ -1,4 +1,4 @@
-define("draggable", ["$event","$attr", "$fx"],function($) {
+define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document),
         disableSelect, enableSelect, $dragger,
         //支持触模设备
@@ -140,6 +140,7 @@ define("draggable", ["$event","$attr", "$fx"],function($) {
                 dd.limit[3] = dd.limit[3] - target.outerHeight();
             }
         }
+        target.data("_mass_dd", dd)
         target.on('dragstart.mass_dd', preventDefault); //处理原生的dragstart事件
         target.on(onstart + ".mass_dd", dd.handle, dragstart); //绑定拖动事件
         dd.dropinit && dd.dropinit(hash);
@@ -328,3 +329,4 @@ define("draggable", ["$event","$attr", "$fx"],function($) {
     }
     return $;
 });
+//2013.1.13 draggable v1
