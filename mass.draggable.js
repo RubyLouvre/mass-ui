@@ -146,7 +146,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     break;
                 }
             } while (el = el.parentNode);
-            if(el.nodeType !== 1) {
+            if(!el) {
                 return
             }
         }
