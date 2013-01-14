@@ -1,13 +1,13 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document),
-        disableSelect, enableSelect, $dragger,
-        //支持触模设备
-        supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
-        onstart = supportTouch ? "touchstart" : "mousedown",
-        ondrag = supportTouch ? "touchmove" : "mousemove",
-        onend = supportTouch ? "touchend" : "mouseup",
-        rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
-        userSelect = $.cssName("user-select");
+    disableSelect, enableSelect, $dragger,
+    //支持触模设备
+    supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
+    onstart = supportTouch ? "touchstart" : "mousedown",
+    ondrag = supportTouch ? "touchmove" : "mousemove",
+    onend = supportTouch ? "touchend" : "mouseup",
+    rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
+    userSelect = $.cssName("user-select");
     if(typeof userSelect === "string") {
         disableSelect = function() { //阻止文档的文本被选择
             $.html.style[userSelect] = "none";
@@ -40,11 +40,10 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         if(this.multi && $.isArrayLike(this.multi) && this.multi.length > 0) {
             for(var j = 0, node; node = this.multi[j]; j++) {
                 if(node != dragger[0]) { //防止环引用，导致死循环
-                    $dragger = $(node)
                     callback(event, node, l, t);
                 }
             }
-            $dragger = dragger;
+        //$dragger = dragger;
         }
     }
     /**
@@ -57,8 +56,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *       如果是这三个字符串之一：parent,document,window，顾名思义，parent就是其父节点， document就是文档对象，取其左上角与右下角的坐标。
      *   noCursor：boolean 默认false。拖动时我们基本都会给个标识说明它能拖动，一般是改变其光标的样式为move，但如果不想改变这个样式， 或者你自己已经用图标做了一个好看的光标了，那么就设置它为true吧。
      *   live：boolean   如果为true，则使用事件代理。
-     *   lockX：boolean  默认false。当值为true时，锁定X轴，只允许上下移动。
-     *   lockY：boolean  默认false。当值为true时，锁定Y轴，只允许左右移动。
+     *   axis：String  决定拖动块只能沿着某一个轴移动，x为水平移移动，y为垂直移动，不等于前两者任意移动
      *   handle：string  手柄的类名，当设置了此参数后，只允许用手柄拖动元素。
      *   ghosting：boolean 默认false。当值为true时，会生成一个幽灵元素，拖动时只拖动幽灵，以减轻内存消耗。 此幽灵元素拥有一个名为mass_ghosting的类名，半透明。
      *   revert：boolean 默认false。当值为true时，让拖动元素在拖动后回到原来的位置。。
@@ -77,21 +75,20 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     $.fn.draggable = function(hash) {
         hash = hash || {};
         var target = this,
-            dd = {}
-            //DD拖动数据对象,用于储存经过修整的用户设置
-            $.mix(dd, {
-                multi: $.isArrayLike(hash.multi) ? hash.multi : null,
-                handle: typeof hash.handle == "string" ? hash.handle : null,
-                scroll: typeof hash.scroll == "boolean" ? hash.scroll : true,
-                strict: typeof hash.strict == "boolean" ? hash.strict : true,
-                returning: typeof hash.returning == "boolean" ? hash.returning : true,
-                //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
-                dispatch: dispatchEvent,
-                //用于实现多点拖动
-                patch: patch
-            });
-        "lockX lockY revert ghosting click".replace($.rword, function(key) {
-            dd[key] = !! hash[key];
+        dd = {}
+        //DD拖动数据对象,用于储存经过修整的用户设置
+        $.mix(dd, {
+            multi:  $.isArrayLike( hash.multi ) ? hash.multi : null,
+            handle: typeof hash.handle == "string" ? hash.handle : null,
+            scroll: typeof hash.scroll == "boolean" ? hash.scroll : true,
+            returning: typeof hash.returning == "boolean" ? hash.returning : true,
+            //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
+            dispatch: dispatchEvent,
+            //用于实现多点拖动
+            patch: patch
+        });
+        "revert ghosting click strict axis".replace($.rword, function(key) {
+            dd[key] =  hash[key];
         });
         //处理滚动相关
         if(dd.scroll) {
@@ -141,20 +138,23 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         }
         target.data("_mass_dd", dd)
+        if(dd.handle){
+            $(dd.handle).data("_mass_dd", dd)
+        }
         target.on('dragstart.mass_dd', preventDefault); //处理原生的dragstart事件
         target.on(onstart + ".mass_dd", dd.handle, dragstart); //绑定拖动事件
         dd.dropinit && dd.dropinit(hash);
     }
 
     function dragstart(event, multi) {
-        var el = multi || event.currentTarget; //如果是多点拖动，存在第二个参数
-        var dragger = $(el)
-        var dd = dragger.data("_mass_dd");
-
+        var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
+        var dd = $.data(node, "_mass_dd");
+        var dragger = $(node)
+        dd.target = dragger;
         disableSelect();
         if(dd.ghosting) { //创建幽灵元素
-            var ghosting = el.cloneNode(false);
-            el.parentNode.insertBefore(ghosting, el.nextSibling);
+            var ghosting = node.cloneNode(false);
+            node.parentNode.insertBefore(ghosting, node.nextSibling);
             if(dd.handle) {
                 dragger.find(dd.handle).appendTo(ghosting)
             }
@@ -172,29 +172,31 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         dd.startY = event.pageY;
         dd.originalX = offset.left;
         dd.originalY = offset.top;
-        if(dragger[0].setCapture) { //设置鼠标捕获
-            dragger[0].setCapture();
+        console.log(dd.originalX +"  "+ dd.originalY)
+        if(node.setCapture) { //设置鼠标捕获
+            node.setCapture();
         } else { //阻止默认动作
             event.preventDefault();
-        };
-        dd.dragger = dragger; //暴露到外围作用域，供drag与dragend与dragstop调用
+        }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
-        dd.dispatch(event, dragger, "dragstart"); //允许dragger在回调中被改写
-        $dragger = dd.dragger;
-        dd.dropstart && dd.dropstart(event);
+        dd.dispatch(event, dragger, "dragstart"); //允许dragger在回调中被改写,dd.multi可在这里被添加
         if(!multi) { //开始批处理dragstart
-            dd.patch(event, dragger, dragstart);
+            console.log("处理多点拖拽")
+            $dragger = dragger;//暴露到外围作用域，供drag与dragend与dragstop调用
+            dd.patch(event, dragger, dragstart);//自己调用自己
             //防止隔空拖动，为了性能起见，150ms才检测一下
             if(dd.strict) {
                 dd.checkID = setInterval(dragstop, 150);
             }
         }
+        dd.dropstart && dd.dropstart(event);
     }
 
     function drag(event, multi, docLeft, docTop) {
         if($dragger && $dragger[0]) {
-            var dd = $dragger.data("_mass_dd");
-
+            var node = multi || $dragger[0]
+            var dd = $.data(node,"_mass_dd");
+            console.log(node+"  "+dd.originalX+"  "+dd.originalY)
             dd.event = event; //这个供dragstop API调用
             //当前元素移动了多少距离
             dd.deltaX = event.pageX - dd.startX;
@@ -203,26 +205,18 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             dd.offsetX = dd.deltaX + dd.originalX;
             dd.offsetY = dd.deltaY + dd.originalY;
 
-            if(!dd.lockX) { //如果没有锁定X轴left,top,right,bottom
+            if(dd.axis != "y") { //如果没有锁定X轴left,top,right,bottom
                 var left = dd.limit ? Math.min(dd.limit[2], Math.max(dd.limit[0], dd.offsetX)) : dd.offsetX
-                $dragger[0].style.left = left + "px";
+                node.style.left = left + "px";
             }
-            if(!dd.lockY) { //如果没有锁定Y轴
+            if(dd.axis != "x") { //如果没有锁定Y轴
                 var top = dd.limit ? Math.min(dd.limit[3], Math.max(dd.limit[1], dd.offsetY)) : dd.offsetY;
-                $dragger[0].style.top = top + "px";
+                node.style.top = top + "px";
             }
 
             if(dd.scroll) {
                 if(dd.scrollParent != document && dd.scrollParent.tagName != 'HTML') {
-                    if(!dd.lockX) {
-                        if((dd.overflowOffset.top + dd.scrollParent.offsetHeight) - event.pageY < dd.scrollSensitivity) {
-                            dd.scrollParent.scrollTop = dd.scrollParent.scrollTop + dd.scrollSpeed;
-                        } else if(event.pageY - dd.overflowOffset.top < dd.scrollSensitivity) {
-                            dd.scrollParent.scrollTop = dd.scrollParent.scrollTop - dd.scrollSpeed;
-                        }
-                    }
-
-                    if(!dd.lockY) {
+                    if(dd.axis != "y") {
                         if((dd.overflowOffset.left + dd.scrollParent.offsetWidth) - event.pageX < dd.scrollSensitivity) {
                             dd.scrollParent.scrollLeft = dd.scrollParent.scrollLeft + dd.scrollSpeed;
                         } else if(event.pageX - dd.overflowOffset.left < dd.scrollSensitivity) {
@@ -230,53 +224,60 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                         }
                     }
 
-                } else {
-                    docLeft = docLeft || $doc.scrollTop();
-                    docTop = docTop || $doc.scrollTop();
-                    if(!dd.lockX) {
-                        if(event.pageY - docTop < dd.scrollSensitivity) {
-                            $doc.scrollTop(docTop - dd.scrollSpeed);
-                        } else if($(window).height() - event.pageY + docTop < dd.scrollSensitivity) {
-                            $doc.scrollTop(docTop + dd.scrollSpeed);
+                    if(dd.axis != "x") {
+                        if((dd.overflowOffset.top + dd.scrollParent.offsetHeight) - event.pageY < dd.scrollSensitivity) {
+                            dd.scrollParent.scrollTop = dd.scrollParent.scrollTop + dd.scrollSpeed;
+                        } else if(event.pageY - dd.overflowOffset.top < dd.scrollSensitivity) {
+                            dd.scrollParent.scrollTop = dd.scrollParent.scrollTop - dd.scrollSpeed;
                         }
                     }
 
-                    if(!dd.lockY) {
+                } else {
+                    docLeft = docLeft || $doc.scrollTop();
+                    docTop = docTop || $doc.scrollTop();
+                    if(dd.axis != "y") {
                         if(event.pageX - docLeft < dd.scrollSensitivity) {
                             $doc.scrollLeft(docLeft - dd.scrollSpeed);
                         } else if($(window).width() - event.pageX + docLeft < dd.scrollSensitivity) {
                             $doc.scrollLeft(docLeft + dd.scrollSpeed);
                         }
                     }
+                    if(dd.axis != "x") {
+                        if(event.pageY - docTop < dd.scrollSensitivity) {
+                            $doc.scrollTop(docTop - dd.scrollSpeed);
+                        } else if($(window).height() - event.pageY + docTop < dd.scrollSensitivity) {
+                            $doc.scrollTop(docTop + dd.scrollSpeed);
+                        }
+                    }
                 }
             }
             dd.dispatch(event, $dragger, "drag");
-            // $.log(dd.dragger)
-            dd.drop && dd.drop(event);
             //开始批处理drag
             if(!multi) {
                 dd.patch(event, $dragger, drag, docLeft, docTop);
             }
+            dd.drop && dd.drop(event);
         }
     }
 
     function dragend(event, multi) {
         if($dragger) {
-            var dragger = $dragger
-            var dd = $dragger.data("_mass_dd");
+            var node = multi || $dragger[0]
+            var dragger = $(node)
+            var dd = $.data(node, "_mass_dd");
             if(dd.checkID) {
                 clearInterval(dd.checkID);
                 dd.event = dd.checkID = null;
             }
-            if(dragger[0].releaseCapture) {
-                dragger[0].releaseCapture();
+            if(node.releaseCapture) {
+                node.releaseCapture();
             }
             dragger.removeClass("mass_dragging");
             if(dd.revert || dd.ghosting && dd.returning) {
-                dd.target.fx(500, { //先让拖动块回到幽灵元素的位置
+                dd.target.fx({ //先让拖动块回到幽灵元素的位置
                     left: dd.revert ? dd.originalX : dd.offsetX,
                     top: dd.revert ? dd.originalY : dd.offsetY
-                });
+                }, 500);
             }
             dd.ghosting && dragger.remove(); //再移除幽灵元素
             dd.dropend && dd.dropend(event); //先执行drop回调
@@ -289,7 +290,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 dd.dragtype = "dragend";
             }
             if(!multi) {
-                dd.patch(event, $dragger, dragend);
+                dd.patch(event, dragger, dragend);
                 $dragger = null;
             }
             enableSelect();
@@ -301,11 +302,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             var dd = $dragger.data("_mass_dd");
             if(dd.event) {
                 var offset = $dragger.offset(),
-                    left = offset.left,
-                    top = offset.top,
-                    event = dd.event,
-                    pageX = event.pageX,
-                    pageY = event.pageY
+                left = offset.left,
+                top = offset.top,
+                event = dd.event,
+                pageX = event.pageX,
+                pageY = event.pageY
                 if(pageX < left || pageY < top || pageX > left + $dragger[0].offsetWidth || pageY > top + $dragger[0].offsetHeight) {
                     dragend(event)
                 }

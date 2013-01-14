@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                var z = 1;
+                $('.drag').click(function(){
+                    $(this).addClass("selected")
+                }).draggable({
+                    dragstart:function(e, dd){
+                        dd.multi = $('.selected');
+                    }
+                });
+            });
+        </script>
+
+        <h1>多点拖拽</h1>
+        <p>同时拖动多个元素。 <a href="index.html">返回</a></p>
+        <h2 class="drag " style="left:20px;"></h2>
+        <h1 class="drag selected" style="left:100px"></h1>
+        <div class="drag" style="left:180px;"></div>
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            top: 120px;
+        }
+        .selected {
+            background-color: #ECB;
+            border-color: #B98;
+        }
+    </style></body>
+</html>

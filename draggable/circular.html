@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                $('.drag').draggable({
+                    dragstart: function(ev, dd){
+                        if ( !$.data( this, 'circle' ) )
+                            $.data( this, 'circle', {
+                                radius: 160,
+                                centerX: dd.originalX + 160 + 30,
+                                centerY: dd.originalY + 30
+                            })
+                    },
+                    drag: function(ev){
+                        var data = $.data( this, 'circle' ),
+                        angle = Math.atan2( ev.pageX - data.centerX, ev.pageY - data.centerY );
+                        $( this ).css({
+                            top: data.centerY + Math.cos( angle ) * data.radius - 30,
+                            left: data.centerX + Math.sin( angle ) * data.radius - 30
+                        });
+                    }
+                });
+
+
+
+            });
+        </script>
+
+        <h1>沿着圆边移动</h1>
+        <p>使用dragstart与drag事件完成。 <a href="index.html">返回</a></p>
+        <div class="drag" style="left:60px;">&bull;</div>
+        <div class="drag" style="left:170px;">&bull;</div>
+        <div class="drag" style="left:280px;">&bull;</div>
+
+    <style type="text/css">
+        body {
+            background: #FFF url("http://threedubmedia.com/inc/img/circles.gif") no-repeat 0px 0px;
+        }
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            top: 180px;
+            cursor: move;
+            text-align: center;
+            font: 24px/62px "Courier New", Courier, monospace;
+            filter: alpha(opacity=75);
+            -moz-opacity: 0.75;
+            opacity: 0.75;
+        }
+    </style></body>
+</html>

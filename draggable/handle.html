@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                $('.drag').draggable({ handle:".handle" });
+            });
+        </script>
+
+        <h1>手柄拖动</h1>
+        <p>handle需要传入目标对象的类名。 <a href="index.html">返回</a></p>
+        <div class="drag" style="left:20px;">
+            <div class="handle">HANDLE</div>
+        </div>
+        <div class="drag" style="left:100px;">
+            <div class="handle">HANDLE</div>
+        </div>
+        <div class="drag" style="left:180px;">
+            <div class="handle">HANDLE</div>
+        </div>
+
+    <style type="text/css">
+.drag {
+	position: absolute;
+	border: 1px solid #89B;
+	background: #BCE;
+	height: 58px;
+	width: 58px;
+	top: 120px;
+	}
+.handle {
+	background: #9AC;
+	border-bottom: 1px solid #89B;
+	cursor: move;
+	font-size: 10px;
+	line-height: 10px;
+	padding: 2px 0;
+	text-align: center;
+	color: #222;
+	}
+    </style></body>
+</html>

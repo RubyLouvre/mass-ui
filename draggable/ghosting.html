@@ -1,0 +1,37 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                $('.drag').draggable({
+                    ghosting:true
+                });
+            });
+        </script>
+
+        <h1>影子拖动</h1>
+        <p>有时候原拖动元素构造非常复杂,拖动它性能消耗非常大,我们可以使用ghosting参数临时生成一个幽灵元素作为拖动块。 <a href="index.html">返回</a></p>
+        <div class="drag" style="left:20px;"></div>
+        <div class="drag" style="left:100px;"></div>
+        <div class="drag" style="left:180px;"></div>
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            top: 120px;
+        }
+
+    </style></body>
+</html>

@@ -1,0 +1,45 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                $('.drag').draggable({ 
+                    dragstart: function(){
+                        $(this).addClass("active");
+                    },
+                    dragend: function(){
+                        $(this).removeClass("active")
+                    }
+                });
+            });
+        </script>
+
+        <h1>激活状态</h1>
+        <p>在拖动前添加一个类名,结束时再移除它。 <a href="index.html">返回</a></p>
+        <div class="drag" style="left:20px;"></div>
+        <div class="drag" style="left:100px;"></div>
+        <div class="drag" style="left:180px;"></div>
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            top: 120px;
+        }
+        .active {
+            background-color: #BEE;
+            border-color: #8BB;
+        }
+    </style></body>
+</html>
