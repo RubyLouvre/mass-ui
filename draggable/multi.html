@@ -11,9 +11,8 @@
     <body>
         <script type="text/javascript">
             require("mass.draggable,ready",function($){
-                var z = 1;
                 $('.drag').click(function(){
-                    $(this).addClass("selected")
+                    $(this).toggleClass("selected")
                 }).draggable({
                     dragstart:function(e, dd){
                         dd.multi = $('.selected');
@@ -24,8 +23,8 @@
 
         <h1>多点拖拽</h1>
         <p>同时拖动多个元素。 <a href="index.html">返回</a></p>
-        <h2 class="drag " style="left:20px;"></h2>
-        <h1 class="drag selected" style="left:100px"></h1>
+        <h2 class="drag" style="left:20px;"></h2>
+        <h1 class="drag" style="left:100px"></h1>
         <div class="drag" style="left:180px;"></div>
 
     <style type="text/css">

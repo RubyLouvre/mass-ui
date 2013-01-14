@@ -36,14 +36,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         dragger.fire(event, this);
     }
 
-    function patch(event, dragger, callback, l, t) {
+    function patchEvent(event, dragger, callback, l, t) {
         if(this.multi && $.isArrayLike(this.multi) && this.multi.length > 0) {
             for(var j = 0, node; node = this.multi[j]; j++) {
                 if(node != dragger[0]) { //防止环引用，导致死循环
                     callback(event, node, l, t);
                 }
             }
-        //$dragger = dragger;
         }
     }
     /**
@@ -83,9 +82,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             scroll: typeof hash.scroll == "boolean" ? hash.scroll : true,
             returning: typeof hash.returning == "boolean" ? hash.returning : true,
             //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
-            dispatch: dispatchEvent,
+            dispatchEvent: dispatchEvent,
             //用于实现多点拖动
-            patch: patch
+            patchEvent: patchEvent
         });
         "revert ghosting click strict axis".replace($.rword, function(key) {
             dd[key] =  hash[key];
@@ -137,19 +136,20 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 dd.limit[3] = dd.limit[3] - target.outerHeight();
             }
         }
-        target.data("_mass_dd", dd)
-        if(dd.handle){
-            $(dd.handle).data("_mass_dd", dd)
-        }
         target.on('dragstart.mass_dd', preventDefault); //处理原生的dragstart事件
         target.on(onstart + ".mass_dd", dd.handle, dragstart); //绑定拖动事件
         dd.dropinit && dd.dropinit(hash);
+        return target.each(function(){
+            $.data(this,"_mass_dd",$.mix({}, dd))//防止共享一个对象
+            if(dd.handle){
+                $(dd.handle, this).data("_mass_dd", $.mix({}, dd))
+            }
+        })
     }
-
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
-        var dd = $.data(node, "_mass_dd");
         var dragger = $(node)
+        var dd = $.data(node, "_mass_dd");
         dd.target = dragger;
         disableSelect();
         if(dd.ghosting) { //创建幽灵元素
@@ -172,18 +172,16 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         dd.startY = event.pageY;
         dd.originalX = offset.left;
         dd.originalY = offset.top;
-        console.log(dd.originalX +"  "+ dd.originalY)
         if(node.setCapture) { //设置鼠标捕获
             node.setCapture();
         } else { //阻止默认动作
             event.preventDefault();
         }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
-        dd.dispatch(event, dragger, "dragstart"); //允许dragger在回调中被改写,dd.multi可在这里被添加
+        dd.dispatchEvent(event, dragger, "dragstart"); //允许dragger在回调中被改写,dd.multi可在这里被添加
         if(!multi) { //开始批处理dragstart
-            console.log("处理多点拖拽")
-            $dragger = dragger;//暴露到外围作用域，供drag与dragend与dragstop调用
-            dd.patch(event, dragger, dragstart);//自己调用自己
+            $dragger = dragger[0];//暴露到外围作用域，供drag与dragend与dragstop调用
+            dd.patchEvent(event, dragger, dragstart);//自己调用自己
             //防止隔空拖动，为了性能起见，150ms才检测一下
             if(dd.strict) {
                 dd.checkID = setInterval(dragstop, 150);
@@ -193,10 +191,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     }
 
     function drag(event, multi, docLeft, docTop) {
-        if($dragger && $dragger[0]) {
-            var node = multi || $dragger[0]
+        if($dragger) {
+            var node = multi || $dragger;
             var dd = $.data(node,"_mass_dd");
-            console.log(node+"  "+dd.originalX+"  "+dd.originalY)
             dd.event = event; //这个供dragstop API调用
             //当前元素移动了多少距离
             dd.deltaX = event.pageX - dd.startX;
@@ -251,10 +248,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     }
                 }
             }
-            dd.dispatch(event, $dragger, "drag");
+            var dragger = $(dragger)
+            dd.dispatchEvent(event, dragger, "drag");
             //开始批处理drag
             if(!multi) {
-                dd.patch(event, $dragger, drag, docLeft, docTop);
+                dd.patchEvent(event, dragger, drag, docLeft, docTop);
             }
             dd.drop && dd.drop(event);
         }
@@ -262,7 +260,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     function dragend(event, multi) {
         if($dragger) {
-            var node = multi || $dragger[0]
+            var node = multi || $dragger
             var dragger = $(node)
             var dd = $.data(node, "_mass_dd");
             if(dd.checkID) {
@@ -281,7 +279,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
             dd.ghosting && dragger.remove(); //再移除幽灵元素
             dd.dropend && dd.dropend(event); //先执行drop回调
-            dd.dispatch(event, dragger, "dragend"); //再执行dragend回调
+            dd.dispatchEvent(event, dragger, "dragend"); //再执行dragend回调
             if(dd.dragtype == "drag" && dd.click === false) { //阻止"非刻意"的点击事件,因为我们每点击页面,都是依次触发mousedown mouseup click事件
                 $.event.fireType = "click";
                 setTimeout(function() {
@@ -290,7 +288,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 dd.dragtype = "dragend";
             }
             if(!multi) {
-                dd.patch(event, dragger, dragend);
+                dd.patchEvent(event, dragger, dragend);
                 $dragger = null;
             }
             enableSelect();
@@ -299,15 +297,15 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     function dragstop() {
         if($dragger) {
-            var dd = $dragger.data("_mass_dd");
+            var dd = $.data($dragger,"_mass_dd");
             if(dd.event) {
-                var offset = $dragger.offset(),
+                var offset = $($dragger).offset(),
                 left = offset.left,
                 top = offset.top,
                 event = dd.event,
                 pageX = event.pageX,
                 pageY = event.pageY
-                if(pageX < left || pageY < top || pageX > left + $dragger[0].offsetWidth || pageY > top + $dragger[0].offsetHeight) {
+                if(pageX < left || pageY < top || pageX > left + $dragger.offsetWidth || pageY > top + $dragger.offsetHeight) {
                     dragend(event)
                 }
             }
