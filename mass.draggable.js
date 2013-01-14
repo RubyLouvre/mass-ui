@@ -135,17 +135,21 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
         var dd = $.data(node, "_mass_dd");
-        if(typeof dd.selector === "string"){
-            var el = event.target;
+        if(!multi && typeof dd.selector === "string"){
+            var el = event.target, match
             do{
                 if($.match(el, dd.selector)){
-                    $.data(el, "_mass_dd", dd);
-                    node = el;
+                    match = el;
                     break;
                 }
-            }while(el = el.parentNode)
+            }while(el = el.parentNode);
+            if(match){
+                node = match;
+                $.data(node, "_mass_dd", dd);
+            }else{
+                return
+            }
         }
-        console.log(node)
         var dragger = $(node)
         dd.target = dragger;
         if(dd.ghosting) { //创建幽灵元素
