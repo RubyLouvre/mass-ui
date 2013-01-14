@@ -1,29 +1,17 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document),
-    disableSelect, enableSelect, $dragger,
+    $dragger,
     //支持触模设备
     supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
     onstart = supportTouch ? "touchstart" : "mousedown",
     ondrag = supportTouch ? "touchmove" : "mousemove",
     onend = supportTouch ? "touchend" : "mouseup",
     rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
-    userSelect = $.cssName("user-select");
-    if(typeof userSelect === "string") {
-        disableSelect = function() { //阻止文档的文本被选择
-            $.html.style[userSelect] = "none";
-        }
-        enableSelect = function() { //恢复文档的文本选择
-            $.html.style[userSelect] = "";
-        };
-    } else {
-        disableSelect = function() { //阻止文档的文本被选择
-            document.unselectable = "on";
-        }
-        enableSelect = function() { //恢复文档的文本选择
-            document.unselectable = "off";
-        };
+    clearSelection = window.getSelection ? function(){
+        window.getSelection().removeAllRanges();
+    } : function(){
+        document.selection.clear();
     }
-
     function preventDefault(event) { //阻止默认行为
         event.preventDefault();
     }
@@ -39,7 +27,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function patchEvent(event, dragger, callback, l, t) {
         if(this.multi && $.isArrayLike(this.multi) && this.multi.length > 0) {
             for(var j = 0, node; node = this.multi[j]; j++) {
-                if(node != dragger[0]) { //防止环引用，导致死循环
+                if(node != dragger) { //防止环引用，导致死循环
                     callback(event, node, l, t);
                 }
             }
@@ -70,11 +58,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *   duration：Number 当ghosting或rewind为true，它会执行一个平滑的动画到目的地，这是它的持续时间，默认是500ms。
      *
      */
-
     $.fn.draggable = function(hash) {
-        hash = hash || {};
-        var target = this,
-        dd = {}
+        hash = hash || {}
+        var dd = $.mix({},  hash)
+        var limit = dd.containment;
+        var target = this;
         //DD拖动数据对象,用于储存经过修整的用户设置
         $.mix(dd, {
             multi:  $.isArrayLike( hash.multi ) ? hash.multi : null,
@@ -85,9 +73,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             dispatchEvent: dispatchEvent,
             //用于实现多点拖动
             patchEvent: patchEvent
-        });
-        "revert ghosting click strict axis".replace($.rword, function(key) {
-            dd[key] =  hash[key];
         });
         //处理滚动相关
         if(dd.scroll) {
@@ -110,7 +95,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 target.on(event + ".mass_dd", fn);
             }
         });
-        var limit = hash.containment;
+       
         if(limit) { //修正其可活动的范围，如果传入的坐标
             if(Array.isArray(limit) && limit.length == 4) { //[x1,y1,x2,y2] left,top,right,bottom
                 dd.limit = limit;
@@ -146,12 +131,23 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         })
     }
+
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
-        var dragger = $(node)
         var dd = $.data(node, "_mass_dd");
+        if(typeof dd.selector === "string"){
+            var el = event.target;
+            do{
+                if($.match(el, dd.selector)){
+                    $.data(el, "_mass_dd", dd);
+                    node = el;
+                    break;
+                }
+            }while(el = el.parentNode)
+        }
+        console.log(node)
+        var dragger = $(node)
         dd.target = dragger;
-        disableSelect();
         if(dd.ghosting) { //创建幽灵元素
             var ghosting = node.cloneNode(false);
             node.parentNode.insertBefore(ghosting, node.nextSibling);
@@ -179,9 +175,10 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
         dd.dispatchEvent(event, dragger, "dragstart"); //允许dragger在回调中被改写,dd.multi可在这里被添加
-        if(!multi) { //开始批处理dragstart
-            $dragger = dragger[0];//暴露到外围作用域，供drag与dragend与dragstop调用
-            dd.patchEvent(event, dragger, dragstart);//自己调用自己
+        $dragger = dragger[0];//暴露到外围作用域，供drag与dragend与dragstop调用
+     
+        if(!multi) { //开始批处理dragstart  
+            dd.patchEvent(event, node, dragstart);//自己调用自己
             //防止隔空拖动，为了性能起见，150ms才检测一下
             if(dd.strict) {
                 dd.checkID = setInterval(dragstop, 150);
@@ -194,6 +191,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         if($dragger) {
             var node = multi || $dragger;
             var dd = $.data(node,"_mass_dd");
+            var dragger = $(node)
             dd.event = event; //这个供dragstop API调用
             //当前元素移动了多少距离
             dd.deltaX = event.pageX - dd.startX;
@@ -201,7 +199,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             //现在的坐标
             dd.offsetX = dd.deltaX + dd.originalX;
             dd.offsetY = dd.deltaY + dd.originalY;
-
             if(dd.axis != "y") { //如果没有锁定X轴left,top,right,bottom
                 var left = dd.limit ? Math.min(dd.limit[2], Math.max(dd.limit[0], dd.offsetX)) : dd.offsetX
                 node.style.left = left + "px";
@@ -248,13 +245,14 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     }
                 }
             }
-            var dragger = $(dragger)
+            clearSelection();
             dd.dispatchEvent(event, dragger, "drag");
+            dd.drop && dd.drop(event);
             //开始批处理drag
             if(!multi) {
-                dd.patchEvent(event, dragger, drag, docLeft, docTop);
+                dd.patchEvent(event, node, drag, docLeft, docTop);
             }
-            dd.drop && dd.drop(event);
+           
         }
     }
 
@@ -288,10 +286,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 dd.dragtype = "dragend";
             }
             if(!multi) {
-                dd.patchEvent(event, dragger, dragend);
+                dd.patchEvent(event, node, dragend);
                 $dragger = null;
             }
-            enableSelect();
         }
     }
 
@@ -314,18 +311,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     $doc.on(ondrag + ".mass_dd", drag)
     $doc.on(onend + ".mass_dd blur.mass_dd", dragend)
-    if(typeof document.onselectstart !== "undefined") { //因为这是返回"object"
-        $doc.on("selectstart.mass_dd", function(e) {
-            if($dragger) {
-                preventDefault(e);
-                if(window.getSelection) {
-                    window.getSelection().removeAllRanges();
-                } else if(document.selection) {
-                    document.selection.clear();
-                }
-            }
-        });
-    }
+
     return $;
 });
 //2013.1.13 draggable v1
