@@ -1,13 +1,13 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document),
-        $dragger,
-        //支持触模设备
-        supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
-        onstart = supportTouch ? "touchstart" : "mousedown",
-        ondrag = supportTouch ? "touchmove" : "mousemove",
-        onend = supportTouch ? "touchend" : "mouseup",
-        rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
-        clearSelection = window.getSelection ?
+    $dragger,
+    //支持触模设备
+    supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
+    onstart = supportTouch ? "touchstart" : "mousedown",
+    ondrag = supportTouch ? "touchmove" : "mousemove",
+    onend = supportTouch ? "touchend" : "mouseup",
+    rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
+    clearSelection = window.getSelection ?
     function() {
         window.getSelection().removeAllRanges();
     } : function() {
@@ -44,7 +44,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *       如果是一个包含四个数字的数组，分别是[x1,y1,x2,y2]
      *       如果是这三个字符串之一：parent,document,window，顾名思义，parent就是其父节点， document就是文档对象，取其左上角与右下角的坐标。
      *   noCursor：boolean 默认false。拖动时我们基本都会给个标识说明它能拖动，一般是改变其光标的样式为move，但如果不想改变这个样式， 或者你自己已经用图标做了一个好看的光标了，那么就设置它为true吧。
-     *   live：boolean   如果为true，则使用事件代理。
+     *   selector：string   使用事件代理。
      *   axis：String  决定拖动块只能沿着某一个轴移动，x为水平移移动，y为垂直移动，不等于前两者任意移动
      *   handle：string  手柄的类名，当设置了此参数后，只允许用手柄拖动元素。
      *   ghosting：boolean 默认false。当值为true时，会生成一个幽灵元素，拖动时只拖动幽灵，以减轻内存消耗。 此幽灵元素拥有一个名为mass_ghosting的类名，半透明。
@@ -99,7 +99,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         });
 
         if(limit) { //修正其可活动的范围，如果传入的坐标
-            if(Array.isArray(limit) && limit.length == 4) { //[x1,y1,x2,y2] left,top,right,bottom
+            if($.isArray(limit) && limit.length == 4) { //[x1,y1,x2,y2] left,top,right,bottom
                 dd.limit = limit;
             } else {
                 if(limit == 'parent') limit = target[0].parentNode;
@@ -137,19 +137,16 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
         var dd = $.data(node, "_mass_dd");
-        if(!multi && typeof dd.selector === "string") {
-            var el = event.target,
-                match
-                do {
-                    if($.match(el, dd.selector)) {
-                        match = el;
-                        break;
-                    }
-                } while (el = el.parentNode);
-            if(match) {
-                node = match;
-                $.data(node, "_mass_dd", dd);
-            } else {
+        if(!multi && typeof dd.selector === "string") {//这里是用于实现事件代理
+            var el = event.target;
+            do {
+                if($.match(el, dd.selector)) {
+                    node = el;
+                    $.data(node, "_mass_dd", dd);
+                    break;
+                }
+            } while (el = el.parentNode);
+            if(el.nodeType !== 1) {
                 return
             }
         }
@@ -276,7 +273,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
             dragger.removeClass("mass_dragging");
             if(dd.revert || dd.ghosting && dd.returning) {
-                dd.target.fx({ //先让拖动块回到幽灵元素的位置
+                dd.target.animate({ //先让拖动块回到幽灵元素的位置
                     left: dd.revert ? dd.originalX : dd.offsetX,
                     top: dd.revert ? dd.originalY : dd.offsetY
                 }, 500);
@@ -303,11 +300,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             var dd = $.data($dragger, "_mass_dd");
             if(dd.event) {
                 var offset = $($dragger).offset(),
-                    left = offset.left,
-                    top = offset.top,
-                    event = dd.event,
-                    pageX = event.pageX,
-                    pageY = event.pageY
+                left = offset.left,
+                top = offset.top,
+                event = dd.event,
+                pageX = event.pageX,
+                pageY = event.pageY
                 if(pageX < left || pageY < top || pageX > left + $dragger.offsetWidth || pageY > top + $dragger.offsetHeight) {
                     dragend(event)
                 }
