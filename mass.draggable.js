@@ -1,13 +1,13 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
-    var $doc = $(document),
-    $dragger,
-    //支持触模设备
-    supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
-    onstart = supportTouch ? "touchstart" : "mousedown",
-    ondrag = supportTouch ? "touchmove" : "mousemove",
-    onend = supportTouch ? "touchend" : "mouseup",
-    rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
-    clearSelection = window.getSelection ?
+    var $doc = $(document.documentElement),
+        $dragger,
+        //支持触模设备
+        supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
+        onstart = supportTouch ? "touchstart" : "mousedown",
+        ondrag = supportTouch ? "touchmove" : "mousemove",
+        onend = supportTouch ? "touchend" : "mouseup",
+        rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)"),
+        clearSelection = window.getSelection ?
     function() {
         window.getSelection().removeAllRanges();
     } : function() {
@@ -98,17 +98,17 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         });
 
-        if(limit) { //修正其可活动的范围，如果传入的坐标
-            if($.isArray(limit) && limit.length == 4) { //[x1,y1,x2,y2] left,top,right,bottom
+        if(limit) { //处理区域鬼拽,确认可活动的范围
+            if($.isArray(limit) && limit.length == 4) { //如果传入的是坐标 [x1,y1,x2,y2] left,top,right,bottom
                 dd.limit = limit;
             } else {
-                if(limit == 'parent') limit = target[0].parentNode;
-                if(limit == 'document' || limit == 'window') {
+                if(limit == 'parent') limit = target[0].parentNode; //如果是parent参数
+                if(limit == 'document' || limit == 'window') { //如果是document|window参数
                     dd.limit = [limit == 'document' ? 0 : $(window).scrollLeft(), limit == 'document' ? 0 : $(window).scrollTop()]
                     dd.limit[2] = dd.limit[0] + $(limit == 'document' ? document : window).width()
                     dd.limit[3] = dd.limit[1] + $(limit == 'document' ? document : window).height()
                 }
-                if(!(/^(document|window|parent)$/).test(limit) && !this.limit) {
+                if(!(/^(document|window|parent)$/).test(limit) && !this.limit) { //如果是元素节点,或元素的CSS表达式或元素的mass对象
                     var c = $(limit);
                     if(c[0]) {
                         var offset = c.offset();
@@ -128,7 +128,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         dd.dropinit && dd.dropinit(hash);
         return target.each(function() {
             $.data(this, "_mass_dd", $.mix({}, dd)) //防止共享一个对象
-            if(dd.handle) {
+            if(dd.handle) { //处理手柄拖拽
                 $(dd.handle, this).data("_mass_dd", $.mix({}, dd))
             }
         })
@@ -137,7 +137,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
         var dd = $.data(node, "_mass_dd");
-        if(!multi && typeof dd.selector === "string") {//这里是用于实现事件代理
+        if(!multi && typeof dd.selector === "string") { //这里是用于实现事件代理
             var el = event.target;
             do {
                 if($.match(el, dd.selector)) {
@@ -152,7 +152,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
         var dragger = $(node)
         dd.target = dragger;
-        if(dd.ghosting) { //创建幽灵元素
+        if(dd.ghosting) { //处理影子拖塌,创建幽灵元素
             var ghosting = node.cloneNode(false);
             node.parentNode.insertBefore(ghosting, node.nextSibling);
             if(dd.handle) {
@@ -178,12 +178,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             event.preventDefault();
         }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
-        dd.dispatchEvent(event, dragger, "dragstart"); //允许dragger在回调中被改写,dd.multi可在这里被添加
+        dd.dispatchEvent(event, dragger, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
         $dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
-        if(!multi) { //开始批处理dragstart  
+        if(!multi) { //处理多点拖拽
             dd.patchEvent(event, node, dragstart); //自己调用自己
-            //防止隔空拖动，为了性能起见，150ms才检测一下
-            if(dd.strict) {
+            if(dd.strict) { //防止隔空拖动，为了性能起见，150ms才检测一下
                 dd.checkID = setInterval(dragstop, 150);
             }
         }
@@ -248,11 +247,10 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     }
                 }
             }
-            clearSelection();
-            dd.dispatchEvent(event, dragger, "drag");
+            clearSelection(); //清理文档中的文本选择
+            dd.dispatchEvent(event, dragger, "drag"); //处理drag回调
             dd.drop && dd.drop(event);
-            //开始批处理drag
-            if(!multi) {
+            if(!multi) { //处理多点拖拽
                 dd.patchEvent(event, node, drag, docLeft, docTop);
             }
 
@@ -294,17 +292,19 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         }
     }
+    //如果鼠标超出了拖动块的范围,则中断拖拽
+
 
     function dragstop() {
         if($dragger) {
             var dd = $.data($dragger, "_mass_dd");
             if(dd.event) {
                 var offset = $($dragger).offset(),
-                left = offset.left,
-                top = offset.top,
-                event = dd.event,
-                pageX = event.pageX,
-                pageY = event.pageY
+                    left = offset.left,
+                    top = offset.top,
+                    event = dd.event,
+                    pageX = event.pageX,
+                    pageY = event.pageY
                 if(pageX < left || pageY < top || pageX > left + $dragger.offsetWidth || pageY > top + $dragger.offsetHeight) {
                     dragend(event)
                 }
