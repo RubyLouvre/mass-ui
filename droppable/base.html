@@ -13,13 +13,12 @@
             require("mass.droppable,ready",function($){
                 $('.drag').draggable();
                 $('.drop').droppable(function(){
-                    console.log(this)
                     $( this ).toggleClass('dropped');
                 });
             });
         </script>
 
-        <h1>基本拖动,什么也不用传</h1>
+        <h1>基本放置，至少要传个函数进去，函数中有两个参数，事件对象与拖拽配置对象，this为放置对象</h1>
         <p><a href="index.html">返回</a></p>
         <div class="drop"></div>
         <div class="drag blue" style="left:20px;"></div>

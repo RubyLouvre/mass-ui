@@ -122,7 +122,7 @@ define("droppable", ["mass.draggable"], function($) {
         delete dd.droppable
         var config = this.activeConfig;
         for( var i = 0, drp; drp = facade.droppers[i++];){
-            config.activeClass && drp.element.removeClass(config.activeClass);
+             config.activeClass && drp.element.removeClass(config.activeClass);
              if(drp['isEnter']){
                 dd.dropper = drp.element;
                 facade.dispatch( event, dd, "drop" );
