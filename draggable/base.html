@@ -11,15 +11,17 @@
     <body>
         <script type="text/javascript">
             require("mass.draggable,ready",function($){
-                $('.drag').draggable();
+                $('.drag').draggable(function(){
+                    $.log(this)
+                });
             });
         </script>
 
         <h1>基本拖动,什么也不用传</h1>
         <p><a href="index.html">返回</a></p>
-        <div class="drag" style="left:20px;"></div>
-        <div class="drag" style="left:100px;"></div>
-        <div class="drag" style="left:180px;"></div>
+        <div class="drag" id="test1" style="left:20px;"></div>
+        <div class="drag" id="test2" style="left:100px;"></div>
+        <div class="drag" id="test3" style="left:180px;"></div>
 
     <style type="text/css">
         .drag {

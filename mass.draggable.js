@@ -39,6 +39,12 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *
      */
     var facade = $.fn.draggable = function(hash) {
+        if(typeof hash == "function"){
+            var fn = hash;
+            hash = {
+                drag: fn
+            }
+        }
         hash = hash || {}
         var dd = $.mix({
             scope: "default",
@@ -117,7 +123,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         event.type = type;
         event.namespace = "mass_dd";
         event.namespace_re = rdrag;
-        dd.dragger.fire(event, dd);
+        var el = /drag/.test(type) ? dd.dragger : dd.dropper;
+        el.fire(event, dd);
     }
     //用于实现多点拖动
     facade.patch = function (event, dd, callback, l, t) {
@@ -262,7 +269,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     }
 
     function dragend(event, multi) {
-        if($dragger) {
+        if($dragger || multi) {
             var node = multi || $dragger
             var dragger = $(node)
             var dd = $.data(node, "_mass_dd");

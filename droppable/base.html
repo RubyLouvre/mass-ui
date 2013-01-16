@@ -12,7 +12,10 @@
         <script type="text/javascript">
             require("mass.droppable,ready",function($){
                 $('.drag').draggable();
-                $('.drop').droppable();
+                $('.drop').droppable(function(){
+                    console.log(this)
+                    $( this ).toggleClass('dropped');
+                });
             });
         </script>
 
