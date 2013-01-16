@@ -122,8 +122,8 @@ define("droppable", ["mass.draggable"], function($) {
         delete dd.droppable
         var config = this.activeConfig;
         for( var i = 0, drp; drp = facade.droppers[i++];){
-             config.activeClass && drp.element.removeClass(config.activeClass);
-             if(drp['isEnter']){
+            config.activeClass && drp.element.removeClass(config.activeClass);
+            if(drp['isEnter']){
                 dd.dropper = drp.element;
                 facade.dispatch( event, dd, "drop" );
                 delete drp['isEnter']
@@ -132,8 +132,8 @@ define("droppable", ["mass.draggable"], function($) {
     }
     // 判定dropper是否包含dragger
     facade.contains =  function(  dropper, dragger ){
-        return ( dragger.left  >= dropper.left) && ( dragger.right  <= dropper.right)
-        && ( dragger.top  >= dropper.top )&& (  dragger.bottom  <= dropper.bottom );
+        return ( ( dragger[0] || dragger.left ) >= dropper.left && ( dragger[0] || dragger.right ) <= dropper.right
+            && ( dragger[1] || dragger.top ) >= dropper.top && ( dragger[1] || dragger.bottom ) <= dropper.bottom );
     }
     // 求出两个方块的重叠面积
     facade.overlap = function( dropper, dragger  ){

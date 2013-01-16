@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>droppable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.droppable,ready",function($){
+                $('.drag').draggable();
+                $('.drop').droppable({
+                    activeClass: "green",
+                    drop: function(){
+                        $( this ).toggleClass('dropped');
+                    }
+                });
+            });
+        </script>
+
+        <h1>activeClass</h1>
+        <p><a href="index.html">返回</a></p>
+        <div class="drop">drop me</div>
+        <div class="drag blue" style="left:20px;"></div>
+        <div class="drag blue" style="left:100px;"></div>
+        <div class="drag blue" style="left:180px;"></div>
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            cursor: move;
+            top: 100px;
+            line-height: 58px;
+            text-align: center;
+        }
+        .green{
+            background:green!important;
+        }
+        .drop {
+            float: right;
+            width: 291px;
+            height: 299px;
+            padding: 0 4px;
+            border: 1px dashed #888;
+            background: #EEE;
+            font-size: 10px;
+            line-height: 15px;
+            overflow: hidden;
+        }
+        .dropped {
+            background-color: #EBC;
+            border-color: #B89;
+        }
+    </style></body>
+</html>

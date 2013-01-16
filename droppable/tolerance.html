@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>droppable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.droppable,ready",function($){
+                $(".drag").draggable({
+                    dragenter:function(){
+                        $( this ).css('opacity',.75);
+                    },
+                    dragleave:function(){
+                        $( this ).css('opacity','');
+                    }
+                });
+                $('.drop').droppable({
+                    tolerance: function( event, proxy, target ){
+                        var r = target.width / 2, x = target.left + r, y = target.top + r,
+                        h = Math.min( Math.abs( x - proxy.left ), Math.abs( x - proxy.right ) ),
+                        v = Math.min( Math.abs( y - proxy.top ), Math.abs( y - proxy.bottom ) );
+                        if ( proxy.top < y && proxy.bottom > y )
+                            return h <= r ? 1 : 0;
+                        else if ( proxy.left < x && proxy.right > x )
+                            return v <= r ? 1 : 0;
+                        else
+                            return Math.sqrt( h * h + v * v ) <= r ? 1 : 0;
+                    } ,
+                    activeClass:"active",
+                    hoverClass:"dropped"
+                });
+            });
+        </script>
+
+        <h1>拖拽元素使用事件代理</h1>
+        <p><a href="index.html">返回</a></p>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drop"></div>
+        <div class="drag" style="left:20px;"></div>
+        <div class="drag" style="left:100px;"></div>
+        <div class="drag" style="left:180px;"></div>
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            cursor: move;
+            top: 110px;
+            line-height: 58px;
+            text-align: center;
+        }
+        .drop {
+            float: left;
+            width: 200px;
+            height: 200px;
+            padding: 0;
+            margin: 80px 20px 0 0;
+            background: #EEE url("http://threedubmedia.com/inc/img/circle.png") no-repeat 0px 0px;
+        }
+        .dropped {
+            background-color: #EBC;
+        }
+        .active {
+            background-color: #CEB;
+        }
+    </style></body>
+</html>
