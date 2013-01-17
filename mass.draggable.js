@@ -1,6 +1,5 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document.documentElement),
-    $dragger,
     //支持触模设备
     supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
     onstart = supportTouch ? "touchstart" : "mousedown",
@@ -189,7 +188,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
         facade.dispatch(event, dd, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
-        $dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
+        facade.dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
         if(!multi) { //处理多点拖拽
             facade.dropinit(event, dd, node);
             facade.patch(   event, dd, dragstart); //自己调用自己
@@ -201,10 +200,10 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     }
 
     function drag(event, multi, docLeft, docTop) {
-        if($dragger) {
-            var node = multi || $dragger;
+        if(facade.dragger) {
+            var node = multi || facade.dragger;
             var dd = $.data(node, "_mass_dd");
-            var dragger = $(node)
+            //var dragger = $(node)
             dd.event = event; //这个供dragstop API调用
             //当前元素移动了多少距离
             dd.deltaX = event.pageX - dd.startX;
@@ -269,8 +268,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     }
 
     function dragend(event, multi) {
-        if($dragger || multi) {
-            var node = multi || $dragger
+        if(facade.dragger || multi) {
+            var node = multi || facade.dragger
             var dragger = $(node)
             var dd = $.data(node, "_mass_dd");
             if(dd.intervalID) {
@@ -299,22 +298,23 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
             if(!multi) {
                 facade.patch(event, dd, dragend);
-                $dragger = null;
+                delete facade.dragger;
             }
         }
     }
    
     function dragstop() { //如果鼠标超出了拖动块的范围,则中断拖拽
-        if($dragger) {
-            var dd = $.data($dragger, "_mass_dd");
+        if(facade.dragger) {
+            var node = facade.dragger
+            var dd = $.data(node, "_mass_dd");
             if(dd.event) {
-                var offset = $($dragger).offset(),
+                var offset = $(node).offset(),
                 left = offset.left,
                 top = offset.top,
                 event = dd.event,
                 pageX = event.pageX,
                 pageY = event.pageY
-                if(pageX < left || pageY < top || pageX > left + $dragger.offsetWidth || pageY > top + $dragger.offsetHeight) {
+                if(pageX < left || pageY < top || pageX > left + node.offsetWidth || pageY > top + node.offsetHeight) {
                     dragend(event)
                 }
             }

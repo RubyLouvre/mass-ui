@@ -4,8 +4,51 @@
         <meta charset="UTF-8" />
         <title>测试</title>
         <style>
-
-
+            #resizable{
+                width:200px;
+                height:200px;
+                border:1px solid green;
+                background: red;
+                margin:20px;
+                position:absolute;
+            }
+            .handle{
+                font-size: 0.1px;
+                position:absolute;
+                display:inline-block;
+                -webkit-text-size-adjust:none;
+                -moz-user-select: none;
+                webkit-user-select: none;
+                user-select: none;
+            }
+            .l{
+                width:10px;
+                height:200px;
+                background:aqua;
+                top:5px;
+                left:-5px;
+            }
+            .t{
+                width:200px;
+                height:10px;
+                background:fuchsia;
+                top:-5px;
+                left:5px;
+            }
+            .r{
+                width:10px;
+                height:200px;
+                background:blue;
+                top:5px;
+                right:-5px;
+            }
+            .b{
+                width:200px;
+                height:10px;
+                background:maroon;
+                bottom:-5px;
+                left:5px;
+            }
         </style>
         <link rel="stylesheet" type="text/css" href="easyui/themes/default/easyui.css">
         <link rel="stylesheet" type="text/css" href="easyui/themes/icon.css">
@@ -14,14 +57,20 @@
         <script type="text/javascript" src="easyui/jquery.easyui.min.js"></script>
         <script>
 
-    
+            $(function(){
+                $('#rr').resizable({
+                    maxWidth:800,
+                    maxHeight:600
+                });
+            })
         </script>
     </head>
 
     <body>
         <p><a href="draggable/index.html">draggable</a></p>
         <p><a href="droppable/index.html">droppable</a></p>
-
+        <p><a href="resizable/index.html">resizable</a></p>
+        <div id="rr" style="width:100px;height:100px;border:1px solid #ccc;"></div>
         <h2>滑动条 - Slider</h2>
         <div class="demo-info">
             <div class="demo-tip icon-tip"></div>
@@ -41,6 +90,12 @@
                    }">
         </div>
         <div id="ff" style="margin-top:50px;font-size:12px">jQuery EasyUI</div>
+        <div id="resizable">
+            <div class="l handle"></div>
+            <div class="r handle"></div>
+            <div class="t handle"></div>
+            <div class="b handle"></div>
+        </div>
     </body>
 
 </body>
