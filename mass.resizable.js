@@ -49,25 +49,51 @@ define("resizable",["mass.draggable"], function($){
         }
     }
     function refresh(e, target, data){
+        var b = data.b || {
+            minWidth: data.minWidth,
+            maxWidth: data.maxWidth,
+            minHeight: data.minHeight,
+            maxHeight: data.maxHeight
+        }
+        if(data._aspectRatio || e.shiftKey) {
+            var  pMinWidth = b.minHeight * data.aspectRatio;
+            var  pMinHeight = b.minWidth / data.aspectRatio;
+            var  pMaxWidth = b.maxHeight * data.aspectRatio;
+            var  pMaxHeight = b.maxWidth / data.aspectRatio;
+
+            if(pMinWidth > b.minWidth) {
+                b.minWidth = pMinWidth;
+            }
+            if(pMinHeight > b.minHeight) {
+                b.minHeight = pMinHeight;
+            }
+            if(pMaxWidth < b.maxWidth) {
+                b.maxWidth = pMaxWidth;
+            }
+            if(pMaxHeight < b.maxHeight) {
+                b.maxHeight = pMaxHeight;
+            }
+        }
+
         if (data.dir.indexOf("e") != -1) {
             var width = data.startWidth + e.pageX - data.startX;
-            width = Math.min(Math.max(width, data.minWidth),data.maxWidth);
+            width = Math.min(Math.max(width, b.minWidth),b.maxWidth);
             data.width = width;
         }
         if (data.dir.indexOf("s") != -1) {
             var height = data.startHeight + e.pageY - data.startY;
-            height = Math.min(Math.max(height, data.minHeight), data.maxHeight);
+            height = Math.min(Math.max(height, b.minHeight), b.maxHeight);
             data.height = height;
         }
         if (data.dir.indexOf("w") != -1) {
             data.width = data.startWidth - e.pageX + data.startX;
-            if (data.width >= data.minWidth && data.width <= data.maxWidth) {
+            if (data.width >= b.minWidth && data.width <= b.maxWidth) {
                 data.left = data.startLeft + e.pageX - data.startX;
             }
         }
         if (data.dir.indexOf("n") != -1) {
             data.height = data.startHeight - e.pageY + data.startY;
-            if (data.height >= data.minHeight && data.height <= data.maxHeight) {
+            if (data.height >= b.minHeight && data.height <= b.maxHeight) {
                 data.top = data.startTop + e.pageY - data.startY;
             }
         }
@@ -78,12 +104,14 @@ define("resizable",["mass.draggable"], function($){
             height: data.height
         });
     }
+
     $.fn.resizable = function(hash){
         var data = $.mix({},defaults,hash || {});
         data.handles =  data.handles.match($.rword) || ["all"]
         if(!/^(x|y|xy)$/.test(data.axis) ){
             data.axis = "";//如果用户没有指定,就禁止拖动
         }
+        data._aspectRatio = !!data.aspectRatio
         this.each(function(){
             if(this.nodeType == 1){
                 var target = $(this)
@@ -116,7 +144,9 @@ define("resizable",["mass.draggable"], function($){
                 startTop:   getCssValue(target, "top"),
                 startWidth: target.width(),
                 startHeight: target.height()
-            })
+            });
+            //等比例缩放
+            data.aspectRatio = (typeof data.aspectRatio === "number") ? data.aspectRatio : ((data.startWidth / data.startHeight) || 1);
             "startLeft,startTop,startWidth,startHeight".replace($.rword, function(word){
                 data[  word.replace("start","").toLowerCase() ] = data[word];
             })
