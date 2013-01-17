@@ -65,7 +65,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             dd.scrollParent = target.scrollParent()[0]
             dd.overflowOffset = target.scrollParent().offset();
         }
-        if(!hash.noCursor) {
+        //处理方向拖拽
+       console.log(dd.axis)
+        if(dd.axis !== "" && !/^(x|y|xy)$/.test(dd.axis) ){
+            dd.axis = "xy";
+        }
+         console.log(dd.axis+"!")
+        if(!dd.noCursor) {
             if(dd.handle) { //添加表示能拖放的样式
                 target.find(dd.handle).css('cursor', 'move');
             } else {
@@ -175,6 +181,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             dragger.data("_mass_dd", dd);
         }
         dd.dragger = dragger;//实际上被拖动的元素
+
         var offset = dragger.offset();
         dd.addClasses && dragger.addClass("mass_dragging");
         dd.startX = event.pageX;
@@ -211,18 +218,18 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             //现在的坐标
             dd.offsetX = dd.deltaX + dd.originalX;
             dd.offsetY = dd.deltaY + dd.originalY;
-            if(dd.axis != "y") { //如果没有锁定X轴left,top,right,bottom
+            if(dd.axis.indexOf("x") !=  -1) { //如果没有锁定X轴left,top,right,bottom
                 var left = dd.limit ? Math.min(dd.limit[2], Math.max(dd.limit[0], dd.offsetX)) : dd.offsetX
                 node.style.left = left + "px";
             }
-            if(dd.axis != "x") { //如果没有锁定Y轴
+            if(dd.axis.indexOf("y") !=  -1) { //如果没有锁定Y轴
                 var top = dd.limit ? Math.min(dd.limit[3], Math.max(dd.limit[1], dd.offsetY)) : dd.offsetY;
                 node.style.top = top + "px";
             }
 
             if(dd.scroll) {
                 if(dd.scrollParent != document && dd.scrollParent.tagName != 'HTML') {
-                    if(dd.axis != "y") {
+                    if(dd.axis.indexOf("x") !=  -1) {
                         if((dd.overflowOffset.left + dd.scrollParent.offsetWidth) - event.pageX < dd.scrollSensitivity) {
                             dd.scrollParent.scrollLeft = dd.scrollParent.scrollLeft + dd.scrollSpeed;
                         } else if(event.pageX - dd.overflowOffset.left < dd.scrollSensitivity) {
@@ -230,7 +237,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                         }
                     }
 
-                    if(dd.axis != "x") {
+                    if(dd.axis.indexOf("y") !=  -1) {
                         if((dd.overflowOffset.top + dd.scrollParent.offsetHeight) - event.pageY < dd.scrollSensitivity) {
                             dd.scrollParent.scrollTop = dd.scrollParent.scrollTop + dd.scrollSpeed;
                         } else if(event.pageY - dd.overflowOffset.top < dd.scrollSensitivity) {
@@ -241,14 +248,14 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 } else {
                     docLeft = docLeft || $doc.scrollTop();
                     docTop = docTop || $doc.scrollTop();
-                    if(dd.axis != "y") {
+                    if(dd.axis.indexOf("x") !=  -1) {
                         if(event.pageX - docLeft < dd.scrollSensitivity) {
                             $doc.scrollLeft(docLeft - dd.scrollSpeed);
                         } else if($(window).width() - event.pageX + docLeft < dd.scrollSensitivity) {
                             $doc.scrollLeft(docLeft + dd.scrollSpeed);
                         }
                     }
-                    if(dd.axis != "x") {
+                    if(dd.axis.indexOf("y") !=  -1) {
                         if(event.pageY - docTop < dd.scrollSensitivity) {
                             $doc.scrollTop(docTop - dd.scrollSpeed);
                         } else if($(window).height() - event.pageY + docTop < dd.scrollSensitivity) {
@@ -326,4 +333,4 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     return $;
 });
-//2013.1.13 draggable v1
+    //2013.1.13 draggable v1

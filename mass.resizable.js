@@ -12,6 +12,7 @@ define("resizable",["mass.draggable"], function($){
         maxWidth: 10000,
         minHeight: 10,
         minWidth: 10,
+        noCursor: true,
         edge:5,
         resizestart: $.noop,
         resize: $.noop,
@@ -35,7 +36,6 @@ define("resizable",["mass.draggable"], function($){
         } else if (e.pageX < offset.left + width && e.pageX > offset.left + width - edge) {
             dir += 'e';
         }
-
         for(var i=0, handle; handle = data.handles[i++]; ) {
             if (handle == 'all' || handle == dir) {
                 return dir;
@@ -84,17 +84,19 @@ define("resizable",["mass.draggable"], function($){
     $.fn.resizable = function(hash){
         var data = $.mix({},defaults,hash || {});
         data.handles =  data.handles.match($.rword) || ["all"]
+        if(!/^(x|y|xy)$/.test(data.axis) ){
+            data.axis = "";//如果用户没有指定,就禁止拖动
+        }
         this.each(function(){
             if(this.nodeType == 1){
-                var el = this;
-                var target = $(el)
+                var target = $(this)
                 var cursor = target.css("cursor");
                 //当鼠标在拖动元素上移动时,在它们靠近边缘的那一霎修改光标样式
                 target.bind('mousemove.resizable', function(e){
-                    if (facade.dragger) return;
+                    if (facade.dragger)return;
                     var dir = getDirection(e, target, data );
                     if (dir == "") {
-                        target.css("cursor", "");
+                        target.css("cursor", "default");
                     } else {
                         target.css("cursor", dir + "-resize");
                     }
