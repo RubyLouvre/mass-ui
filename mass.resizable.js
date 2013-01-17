@@ -1,10 +1,7 @@
 
-//事件 resizestart  resize resizestop
+//事件 resizestart  resize  resizeend
 //canHaveChildren 获取表明对象是否可以包含子对象的值。document.createElement("textarea").canHaveChildren
 //canHaveHTML 获取表明对象是否可以包含丰富的 HTML 标签的值。 html返回false,因为只能包含head与body
-/**
- *思路首先判定元素是否能插入节点 不能则创建包裹对象 然后插入8个子元素作为拖动手柄 拖动手柄在drag事件中改变原对象或包裹对象的宽高
- */
 define("resizable",["mass.draggable"], function($){
     var defaults = {
         handles: "n,e,s,w,ne,se,sw,nw",

@@ -6,12 +6,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     ondrag = supportTouch ? "touchmove" : "mousemove",
     onend = supportTouch ? "touchend" : "mouseup",
     rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)")
-   
-    function preventDefault(event) { //阻止默认行为
-        event.preventDefault();
-    }
-
-
     /**
      *
      *  containment：规定拖动块可活动的范围。有五种情况.
@@ -66,11 +60,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             dd.overflowOffset = target.scrollParent().offset();
         }
         //处理方向拖拽
-       console.log(dd.axis)
+
         if(dd.axis !== "" && !/^(x|y|xy)$/.test(dd.axis) ){
             dd.axis = "xy";
         }
-         console.log(dd.axis+"!")
+
         if(!dd.noCursor) {
             if(dd.handle) { //添加表示能拖放的样式
                 target.find(dd.handle).css('cursor', 'move');
@@ -111,7 +105,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 dd.limit[3] = dd.limit[3] - target.outerHeight();
             }
         }
-        target.on('dragstart.mass_dd', preventDefault); //处理原生的dragstart事件
         target.on(onstart + ".mass_dd", dd.handle, dragstart); //绑定拖动事件
         return target.each(function() {
             $.data(this, "_mass_dd", $.mix({}, dd)) //防止共享一个对象
@@ -190,8 +183,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         dd.originalY = offset.top;
         if(node.setCapture) { //设置鼠标捕获
             node.setCapture();
-        } else { //阻止默认动作
-            event.preventDefault();
         }
         dd.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
         facade.dispatch(event, dd, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
