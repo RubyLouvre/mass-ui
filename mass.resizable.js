@@ -15,9 +15,13 @@ define("resizable", ["mass.draggable"], function($) {
         resizeend: $.noop
     }
     var facade = $.fn.draggable;
-    //用于修正拖动元素靠边边缘的区域的鼠标样式
-
-
+  
+    /**
+ * 用于修正拖动元素靠边边缘的区域的鼠标样式
+ * @param {Event} e
+ * @param {Mass} target
+ * @param {Object} data 经过处理的配置对象
+ */
     function getDirection(e, target, data) {
         var dir = '';
         var offset = target.offset();
@@ -42,7 +46,7 @@ define("resizable", ["mass.draggable"], function($) {
         return '';
     }
 
-    function getCssValue(el, css) {
+    function getCssValue(el, css) {//对样式值进行处理,强制转数值
         var val = parseInt(el.css(css), 10);
         if(isNaN(val)) {
             return 0;
@@ -51,7 +55,7 @@ define("resizable", ["mass.draggable"], function($) {
         }
     }
 
-    function refresh(e, target, data) {
+    function refresh(e, target, data) {//刷新缩放元素
         var b = data.b || {
             minWidth: data.minWidth,
             maxWidth: data.maxWidth,
@@ -59,6 +63,7 @@ define("resizable", ["mass.draggable"], function($) {
             maxHeight: data.maxHeight
         }
         if(data._aspectRatio || e.shiftKey) {
+            var aspest = true;
             var pMinWidth = b.minHeight * data.aspectRatio;
             var pMinHeight = b.minWidth / data.aspectRatio;
             var pMaxWidth = b.maxHeight * data.aspectRatio;
@@ -82,22 +87,34 @@ define("resizable", ["mass.draggable"], function($) {
             var width = data.startWidth + e.pageX - data.startX;
             width = Math.min(Math.max(width, b.minWidth), b.maxWidth);
             data.width = width;
+            if(aspest){
+                data.height = width / data.aspectRatio;
+            }
         }
         if(data.dir.indexOf("s") != -1) {
             var height = data.startHeight + e.pageY - data.startY;
             height = Math.min(Math.max(height, b.minHeight), b.maxHeight);
             data.height = height;
+            if(aspest){
+                data.width = height * data.aspectRatio;
+            }
         }
         if(data.dir.indexOf("w") != -1) {
             data.width = data.startWidth - e.pageX + data.startX;
             if(data.width >= b.minWidth && data.width <= b.maxWidth) {
                 data.left = data.startLeft + e.pageX - data.startX;
+                if(aspest){
+                    data.top =  data.startTop + (e.pageX - data.startX)  / data.aspectRatio;
+                }
             }
         }
         if(data.dir.indexOf("n") != -1) {
             data.height = data.startHeight - e.pageY + data.startY;
             if(data.height >= b.minHeight && data.height <= b.maxHeight) {
                 data.top = data.startTop + e.pageY - data.startY;
+                if(aspest){
+                    data.left =  data.startLeft + (e.pageY - data.startY) *  data.aspectRatio;
+                }
             }
         }
         target.css({
@@ -110,26 +127,26 @@ define("resizable", ["mass.draggable"], function($) {
 
     $.fn.resizable = function(hash) {
         var data = $.mix({}, defaults, hash || {});
-        data.handles = data.handles.match($.rword) || ["all"]
+        data.handles = data.handles.match($.rword) || ["all"];//
         if(!/^(x|y|xy)$/.test(data.axis)) {
             data.axis = ""; //如果用户没有指定,就禁止拖动
         }
         data._aspectRatio = !! data.aspectRatio
         this.each(function() {
             if(this.nodeType == 1) {
-                var target = $(this)
-                var cursor = target.css("cursor");
                 //当鼠标在拖动元素上移动时,在它们靠近边缘的那一霎修改光标样式
-                target.bind('mousemove.resizable', function(e) {
+                $(this).bind('mousemove.resizable', data.selector, function(e) {
+                    var target = $(this)
                     if(facade.dragger) return;
                     var dir = getDirection(e, target, data);
+                    $._data(this, "cursor", target.css("cursor"));//保存原来的光标样式
                     if(dir == "") {
                         target.css("cursor", "default");
                     } else {
                         target.css("cursor", dir + "-resize");
                     }
                 }).bind("mouseleave.resizable", function(e) {
-                    target.css("cursor", cursor); //还原光标样式
+                    $(this).css("cursor", $._data(this,"cursor")); //还原光标样式
                 })
             }
 
@@ -148,12 +165,12 @@ define("resizable", ["mass.draggable"], function($) {
                 startWidth: target.width(),
                 startHeight: target.height()
             });
-            //等比例缩放
-            data.aspectRatio = (typeof data.aspectRatio === "number") ? data.aspectRatio : ((data.startWidth / data.startHeight) || 1);
             "startLeft,startTop,startWidth,startHeight".replace($.rword, function(word) {
                 data[word.replace("start", "").toLowerCase()] = data[word];
-            })
-            e.type = "resizestart"
+            });
+            //等比例缩放
+            data.aspectRatio = (typeof data.aspectRatio === "number") ? data.aspectRatio : ((data.startWidth / data.startHeight) || 1);
+            e.type = "resizestart";
             data.resizestart.call(target[0], e, data); //触发用户回调
             $('body').css('cursor', dir + '-resize');
         }
@@ -161,7 +178,7 @@ define("resizable", ["mass.draggable"], function($) {
             if(data.dir) {
                 var target = data.element;
                 refresh(e, target, data);
-                e.type = "resize"
+                e.type = "resize";
                 data.resize.call(data.element[0], e, data); //触发用户回调
             }
         }
@@ -172,7 +189,7 @@ define("resizable", ["mass.draggable"], function($) {
                 delete data.dir;
                 e.type = "resizeend";
                 data.resizeend.call(data.element[0], e, data); //触发用户回调
-                $('body').css("cursor", "");
+                $('body').css("cursor", "default");
             }
         }
         return this.draggable(data)
