@@ -17,60 +17,73 @@ define("droppable", ["mass.draggable"], function($) {
             }
         }
         hash = hash || {}
-        var config = $.mix({
+        var data = $.mix({
             element: this
         }, defaults, hash);
-        var target = this
-        config.tolerance = typeof config.tolerance === "function" ? config.tolerance : facade.modes[config.tolerance];
-        facade.scopes["#" + config.scope] = config;
-
-        fn = config.drop
-        if(typeof fn == "function") {
-            target.on("drop.mass_dd", fn);
-        }
-
+        data.tolerance = typeof data.tolerance === "function" ? data.tolerance : facade.modes[data.tolerance];
+        this.data("droppable", data);
+        var queue = facade.scopes["#" + data.scope] || (facade.scopes["#" + data.scope]  = [])
+        queue.push(data)
         return this;
     }
     //取得放置对象的坐标宽高等信息
-    facade.locate = function(element) {
+    facade.locate = function(element, config) {
         var posi = element.offset() || {
             top: 0,
             left: 0
         },
-            height = element.outerHeight(),
-            width = element.outerWidth()
-            return {
-                element: element,
-                width: width,
-                height: height,
-                top: posi.top,
-                left: posi.left,
-                right: posi.left + width,
-                bottom: posi.top + height
-            };
+        height = element.outerHeight(),
+        width = element.outerWidth()
+        return {
+            element: element,
+            config: config,
+            width: width,
+            height: height,
+            top: posi.top,
+            left: posi.left,
+            right: posi.left + width,
+            bottom: posi.top + height
+        };
     }
+    //八大行为组件 draggable droppable resizable sortable selectable scrollable switchable fixedable
     facade.dropinit = function(event, dd) {
-        var config = facade.scopes["#" + dd.scope]
-        if(config) {
-            this.nodes = [];
-            var elements = config.selector ? $(config.selector, config.element) : config.element;
-            this.nodes = $.filter(elements, function(node) {
+        var queue = facade.scopes["#" + dd.scope]
+        if(queue) {
+            //收集要放置的元素
+            var a = []
+            for(var i =0, el; el = queue[i++];){
+                var arr = el.element
+                if(typeof el.selector === "string"){
+                    arr = $(el.selector, el.element) ;
+                    arr.data("droppable", el)
+                }
+                a.push.apply(a, arr )
+            }
+            var b = $.filter(a, function(node) {//去掉非元素节点
                 return node.nodeType == 1;
-            })
-            facade.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
-                return facade.locate($(this))
             });
-            this.activeConfig = config
+            this.nodes =  $.unique(b);//去重，排序
+
+            facade.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
+                var el = $(this), config = el.data("droppable")
+                if(typeof config.drop == "function") {
+                    el.off("drop.mass_dd").on("drop.mass_dd", config.drop);
+                }
+                return facade.locate(el, config)
+            });
         } else {
-            this.activeConfig = this.droppers = false
+            this.nodes = [];
+            this.droppers = false
         }
     }
     facade.dropstart = function(event, dd, node) {
-        var accept = facade.activeConfig.accept;
-        if(node.nodeType == 1) {
+        var nodes = facade.droppers;
+        for(var i =0, el; el = nodes[i++];){
+            var accept = el.config.accept;
             if(accept == "*" || $.match(node, accept)) {
                 if(facade.nodes.indexOf(node) == -1) {
-                    dd.droppable = true
+                    dd.droppable = true;
+                    break;
                 }
             }
         }
@@ -78,18 +91,15 @@ define("droppable", ["mass.draggable"], function($) {
     facade.drop = function(event, dd) {
         //此事件在draggable的drag事件上执行
         if(!dd.droppable) return
-        var config = facade.activeConfig;
-        var tolerance = config.tolerance;
-        var activeClass = config.activeClass;
-        var hoverClass = config.hoverClass;
         var xy = [event.pageX, event.pageY];
-        var droppers = facade.droppers,
-            drg, drp, type;
-        if(tolerance) { //自己规定何时触发dragenter dragleave
-            drg = facade.locate(dd.dragger); //生成拖拽元素的坐标对象
-        }
+        var droppers = facade.droppers;
+        var drg = facade.locate(dd.dragger); //生成拖拽元素的坐标对象
         for(var i = 0, n = droppers.length; i < n; i++) {
-            drp = droppers[i];
+            var drp = droppers[i];
+            var config = drp.config;
+            var activeClass = config.activeClass;
+            var hoverClass = config.hoverClass;
+            var tolerance = config.tolerance;
             if(!droppers.actived && activeClass) { //如果还没有激活
                 drp.element.addClass(activeClass);
             }
@@ -100,27 +110,28 @@ define("droppable", ["mass.draggable"], function($) {
                     drp['isEnter'] = 1;
                     hoverClass && drp.element.addClass(hoverClass);
                     dd.dropper = drp.element;
-                    type = "dragenter"
+                    var type = "dragenter";
                 } else { //标识已进入
-                    type = "dragover"
+                    type = "dragover";
                 }
                 facade.dispatch(event, dd, type);
             } else { //如果光标离开放置对象
                 if(drp['isEnter']) {
                     hoverClass && drp.element.removeClass(hoverClass);
+                    console.log("hover")
                     dd.dropper = drp.element; //处理覆盖多个靶场
                     facade.dispatch(event, dd, "dragleave");
-                    delete drp['isEnter']
+                    delete drp['isEnter'];
                 }
             }
         }
         droppers.actived = 1;
     }
     facade.dropend = function(event, dd) {
-        if(!dd.droppable) return
-        delete dd.droppable
-        var config = this.activeConfig;
+        if(!dd.droppable) return;
+        delete dd.droppable;
         for(var i = 0, drp; drp = facade.droppers[i++];) {
+            var config = drp.config;
             config.activeClass && drp.element.removeClass(config.activeClass);
             if(drp['isEnter']) {
                 dd.dropper = drp.element;
