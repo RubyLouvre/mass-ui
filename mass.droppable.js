@@ -10,7 +10,7 @@ define("droppable", ["mass.draggable"], function($) {
     var facade = $.fn.draggable
     facade.scopes = {}
     $.fn.droppable = function(hash) {
-        if(typeof hash == "function") {
+        if(typeof hash == "function") {//如果只传入函数,那么当作是drop自定义事件的回调
             var fn = hash;
             hash = {
                 drop: fn
@@ -49,7 +49,7 @@ define("droppable", ["mass.draggable"], function($) {
         var queue = facade.scopes["#" + dd.scope]
         if(queue) {
             //收集要放置的元素
-            var a = []
+            var a = [];
             for(var i =0, el; el = queue[i++];){
                 var arr = el.element
                 if(typeof el.selector === "string"){
@@ -67,7 +67,7 @@ define("droppable", ["mass.draggable"], function($) {
             facade.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
                 var el = $(this), config = el.data("droppable")
                 if(typeof config.drop == "function") {
-                    el.off("drop.droppable").on("drop.droppable", config.drop);
+                    el.on("drop.draggable", config.drop);
                 }
                 return facade.locate(el, config)
             });
@@ -96,8 +96,8 @@ define("droppable", ["mass.draggable"], function($) {
         var el = dd.dragger
         var drg = el.drg || (el.drg = {
             element: el,
-            height: el.innerHeight(),
-            width: el.innerWidth()
+            width: el.outerWidth(),
+            height: el.outerHeight()
         });
         facade.locate(el, null, el.drg); //生成拖拽元素的坐标对象
         for(var i = 0, n = droppers.length; i < n; i++) {
@@ -142,7 +142,7 @@ define("droppable", ["mass.draggable"], function($) {
             if(drp['isEnter']) {
                 dd.dropper = drp.element;
                 facade.dispatch(event, dd, "drop");
-                delete drp['isEnter']
+                delete drp['isEnter'];
             }
         }
     }

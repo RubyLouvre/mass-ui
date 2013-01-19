@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>selectable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.selectable,ready",function($){
+
+                $('#selectable').selectable({
+                });
+            });
+        </script>
+
+        <h1>普通缩放</h1>
+        <p><a href="../index.html">返回</a></p>
+        <ol id="selectable" class="ui-selectable">
+            <li class="ui-widget-content ui-selectee">Item 1</li>
+            <li class="ui-widget-content ui-selectee">Item 2</li>
+            <li class="ui-widget-content ui-selectee">Item 3</li>
+            <li class="ui-widget-content ui-selectee">Item 4</li>
+            <li class="ui-widget-content ui-selectee">Item 5</li>
+            <li class="ui-widget-content ui-selectee">Item 6</li>
+            <li class="ui-widget-content ui-selectee">Item 7</li>
+        </ol>
+
+
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 100px;
+            width: 100px;
+            cursor: move;
+            top: 120px;
+        }
+    </style></body>
+</html>

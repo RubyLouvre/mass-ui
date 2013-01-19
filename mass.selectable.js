@@ -1,4 +1,4 @@
-define("selectable",["droppable"], function(){
+define("selectable",["mass.resizable","mass.droppable"], function(){
     var defaults =  {
         appendTo: "body",
         autoRefresh: true,
@@ -14,10 +14,28 @@ define("selectable",["droppable"], function(){
         unselected: null,
         unselecting: null
     }
-    $.selectable = function(hash){
+    $.fn.selectable = function(hash){
         var config = $.mix({}, defaults, hash || {})
-        hash.selector = hash.filter;
+        config.selector = config.filter;
+        config.helper = $("<div class='ui-selectable-helper'></div>");
+        this.mousedown(function(event){
+            $(config.appendTo).append(config.helper);
+            // position helper (lasso)
+            config.helper.css({
+                "left": event.pageX,
+                "top": event.pageY,
+                "width": 0,
+                "height": 0,
+                backgroundColor:"red",
+                opacity:.5
+            });
+        })
+        this.mouseup(function(event){
+            config.helper.remove();
+        })
+        //  config.dropinit
         
-        $.fn.droppable(hash)
+        this.droppable(config)
     }
+    return $;
 })
