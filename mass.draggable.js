@@ -5,7 +5,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         onstart = supportTouch ? "touchstart" : "mousedown",
         ondrag = supportTouch ? "touchmove" : "mousemove",
         onend = supportTouch ? "touchend" : "mouseup",
-        rdrag = new RegExp("(^|\\.)mass_dd(\\.|$)")
+        rdrag = new RegExp("(^|\\.)draggable(\\.|$)")
         /**
      *
      *  containment：规定拖动块可活动的范围。有五种情况.
@@ -75,7 +75,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             "dragstart drag dragend dragenter dragover dragleave drop".replace($.rword, function(event) {
                 var fn = hash[event];
                 if(typeof fn == "function") {
-                    target.on(event + ".mass_dd", fn);
+                    target.on(event + ".draggable", fn);
                 }
             });
 
@@ -104,11 +104,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     dd.limit[3] = dd.limit[3] - target.outerHeight();
                 }
             }
-            target.on(onstart + ".mass_dd", dd.handle, dragstart); //绑定拖动事件
+            target.on(onstart + ".draggable", dd.handle, dragstart); //绑定拖动事件
             return target.each(function() {
-                $.data(this, "_mass_dd", $.mix({}, dd)) //防止共享一个对象
+                $.data(this, "draggable", $.mix({}, dd)) //防止共享一个对象
                 if(dd.handle) { //处理手柄拖拽
-                    $(dd.handle, this).data("_mass_dd", $.mix({}, dd))
+                    $(dd.handle, this).data("draggable", $.mix({}, dd))
                 }
             })
         }
@@ -118,7 +118,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     facade.dispatch = function(event, dd, type) {
         //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
         event.type = type;
-        event.namespace = "mass_dd";
+        event.namespace = "draggable";
         event.namespace_re = rdrag;
         var el = /drag/.test(type) ? dd.dragger : dd.dropper;
         el.fire(event, dd);
@@ -144,13 +144,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
-        var dd = $.data(node, "_mass_dd");
+        var dd = $.data(node, "draggable");
         if(!multi && typeof dd.selector === "string") { //这里是用于实现事件代理
             var el = event.target;
             do {
                 if($.match(el, dd.selector)) {
                     node = el;
-                    $.data(node, "_mass_dd", dd);
+                    $.data(node, "draggable", dd);
                     break;
                 }
             } while (el = el.parentNode);
@@ -172,7 +172,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 ghosting.style.filter = "alpha(opacity=50)";
             }
             dragger = $(ghosting).addClass("mass_ghosting"); //拖动对象
-            dragger.data("_mass_dd", dd);
+            dragger.data("draggable", dd);
         }
         dd.dragger = dragger; //实际上被拖动的元素
         var offset = dragger.offset();
@@ -200,7 +200,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function drag(event, multi, docLeft, docTop) {
         if(facade.dragger) {
             var node = multi || facade.dragger;
-            var dd = $.data(node, "_mass_dd");
+            var dd = $.data(node, "draggable");
             //var dragger = $(node)
             dd.event = event; //这个供dragstop API调用
             //当前元素移动了多少距离
@@ -269,7 +269,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         if(facade.dragger || multi) {
             var node = multi || facade.dragger
             var dragger = $(node)
-            var dd = $.data(node, "_mass_dd");
+            var dd = $.data(node, "draggable");
             if(dd.intervalID) {
                 clearInterval(dd.intervalID);
                 dd.event = dd.intervalID = null;
@@ -304,7 +304,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     function dragstop() { //如果鼠标超出了拖动块的范围,则中断拖拽
         if(facade.dragger) {
             var node = facade.dragger
-            var dd = $.data(node, "_mass_dd");
+            var dd = $.data(node, "draggable");
             if(dd.event) {
                 var offset = $(node).offset(),
                     left = offset.left,
@@ -319,8 +319,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
     }
 
-    $doc.on(ondrag + ".mass_dd", drag)
-    $doc.on(onend + ".mass_dd blur.mass_dd", dragend)
+    $doc.on(ondrag + ".draggable", drag)
+    $doc.on(onend + ".draggable blur.draggable", dragend)
 
     return $;
 });

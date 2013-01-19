@@ -27,23 +27,22 @@ define("droppable", ["mass.draggable"], function($) {
         return this;
     }
     //取得放置对象的坐标宽高等信息
-    facade.locate = function(element, config) {
-        var posi = element.offset() || {
+    facade.locate = function(el, config, drg) {
+        var posi = el.offset() || {
             top: 0,
             left: 0
-        },
-        height = element.outerHeight(),
-        width = element.outerWidth()
-        return {
-            element: element,
+        }
+        drg = drg || {
+            element: el,
             config: config,
-            width: width,
-            height: height,
-            top: posi.top,
-            left: posi.left,
-            right: posi.left + width,
-            bottom: posi.top + height
-        };
+            width: el.outerWidth(),
+            height: el.outerHeight()
+        }
+        drg.top = posi.top;
+        drg.left = posi.left;
+        drg.right =  posi.left + drg.width;
+        drg.bottom = posi.top + drg.height;
+        return drg;
     }
     //八大行为组件 draggable droppable resizable sortable selectable scrollable switchable fixedable
     facade.dropinit = function(event, dd) {
@@ -57,7 +56,8 @@ define("droppable", ["mass.draggable"], function($) {
                     arr = $(el.selector, el.element) ;
                     arr.data("droppable", el)
                 }
-                a.push.apply(a, arr )
+                arr = -[1,] ? arr : $.slice(arr);//IE6-8只能传入数组，其他浏览器只需类数组就行了
+                a.push.apply(a, arr );
             }
             var b = $.filter(a, function(node) {//去掉非元素节点
                 return node.nodeType == 1;
@@ -67,7 +67,7 @@ define("droppable", ["mass.draggable"], function($) {
             facade.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
                 var el = $(this), config = el.data("droppable")
                 if(typeof config.drop == "function") {
-                    el.off("drop.mass_dd").on("drop.mass_dd", config.drop);
+                    el.off("drop.droppable").on("drop.droppable", config.drop);
                 }
                 return facade.locate(el, config)
             });
@@ -93,7 +93,13 @@ define("droppable", ["mass.draggable"], function($) {
         if(!dd.droppable) return
         var xy = [event.pageX, event.pageY];
         var droppers = facade.droppers;
-        var drg = facade.locate(dd.dragger); //生成拖拽元素的坐标对象
+        var el = dd.dragger
+        var drg = el.drg || (el.drg = {
+            element: el,
+            height: el.innerHeight(),
+            width: el.innerWidth()
+        });
+        facade.locate(el, null, el.drg); //生成拖拽元素的坐标对象
         for(var i = 0, n = droppers.length; i < n; i++) {
             var drp = droppers[i];
             var config = drp.config;
@@ -118,7 +124,6 @@ define("droppable", ["mass.draggable"], function($) {
             } else { //如果光标离开放置对象
                 if(drp['isEnter']) {
                     hoverClass && drp.element.removeClass(hoverClass);
-                    console.log("hover")
                     dd.dropper = drp.element; //处理覆盖多个靶场
                     facade.dispatch(event, dd, "dragleave");
                     delete drp['isEnter'];
@@ -130,6 +135,7 @@ define("droppable", ["mass.draggable"], function($) {
     facade.dropend = function(event, dd) {
         if(!dd.droppable) return;
         delete dd.droppable;
+        delete dd.dragger.drg;
         for(var i = 0, drp; drp = facade.droppers[i++];) {
             var config = drp.config;
             config.activeClass && drp.element.removeClass(config.activeClass);
@@ -168,3 +174,4 @@ define("droppable", ["mass.draggable"], function($) {
     }
     return $;
 })
+//2013.1.19 优化facade.locate
