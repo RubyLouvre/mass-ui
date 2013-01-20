@@ -117,7 +117,6 @@ define("resizable", ["mass.draggable"], function($) {
                 }
             }
         }
-        console.log(target)
         target.css({
             left: data.left,
             top: data.top,
