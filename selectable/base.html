@@ -12,8 +12,7 @@
         <script type="text/javascript">
             require("mass.selectable,ready",function($){
 
-                $('#selectable').selectable({
-                });
+                $('#selectable').selectable();
             });
         </script>
 
@@ -40,5 +39,7 @@
             cursor: move;
             top: 120px;
         }
+        #selectable .ui-selecting { background: #FECA40; }
+        #selectable .ui-selected { background: #F39814;  }
     </style></body>
 </html>

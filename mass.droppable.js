@@ -7,8 +7,8 @@ define("droppable", ["mass.draggable"], function($) {
         scope: "default",
         tolerance: "intersect"
     }
-    var facade = $.fn.draggable;
-    facade.scopes = {};
+    var draggable = $.fn.draggable;
+    draggable.scopes = {};
     $.fn.droppable = function(hash) {
         if(typeof hash == "function") {//如果只传入函数,那么当作是drop自定义事件的回调
             var fn = hash;
@@ -20,14 +20,14 @@ define("droppable", ["mass.draggable"], function($) {
         var data = $.mix({
             element: this
         }, defaults, hash);
-        data.tolerance = typeof data.tolerance === "function" ? data.tolerance : facade.modes[data.tolerance];
+        data.tolerance = typeof data.tolerance === "function" ? data.tolerance : draggable.modes[data.tolerance];
         this.data("droppable", data);
-        var queue = facade.scopes["#" + data.scope] || (facade.scopes["#" + data.scope]  = [])
+        var queue = draggable.scopes["#" + data.scope] || (draggable.scopes["#" + data.scope]  = [])
         queue.push(data)
         return this;
     }
     //取得放置对象的坐标宽高等信息
-    facade.locate = function(el, config, drg) {
+    draggable.locate = function(el, config, drg) {
         var posi = el.offset() || {
             top: 0,
             left: 0
@@ -45,8 +45,8 @@ define("droppable", ["mass.draggable"], function($) {
         return drg;
     }
     //八大行为组件 draggable droppable resizable sortable selectable scrollable switchable fixedable
-    facade.dropinit = function(event, dd) {
-        var queue = facade.scopes["#" + dd.scope]
+    draggable.dropinit = function(event, dd) {
+        var queue = draggable.scopes["#" + dd.scope]
         if(queue) {
             //收集要放置的元素
             var a = [];
@@ -64,44 +64,43 @@ define("droppable", ["mass.draggable"], function($) {
             });
             this.nodes =  $.unique(b);//去重，排序
 
-            facade.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
+            draggable.droppers = $.map(this.nodes, function() { //批量生成放置元素的坐标对象
                 var el = $(this), config = el.data("droppable")
                 if(typeof config.drop == "function") {
                     el.on("drop.draggable", config.drop);
                 }
-                return facade.locate(el, config);
+                return draggable.locate(el, config);
             });
         } else {
             this.nodes = [];
             this.droppers = false;
         }
     }
-    facade.dropstart = function(event, dd, node) {
-        var nodes = facade.droppers;
+    draggable.dropstart = function(event, dd, node) {
+        var nodes = draggable.droppers;
         for(var i =0, el; el = nodes[i++];){
             var accept = el.config.accept;
             if(accept == "*" || $.match(node, accept)) {
-                if(facade.nodes.indexOf(node) == -1) {
+                if(draggable.nodes.indexOf(node) == -1) {
                     dd.droppable = true;
                     break;
                 }
             }
         }
     }
-    facade.drop = function(event, dd) {
+    draggable.drop = function(event, dd) {
         //此事件在draggable的drag事件上执行
         if(!dd.droppable) return;
         var xy = [event.pageX, event.pageY];
-        var droppers = facade.droppers;
+        var droppers = draggable.droppers;
         var el = dd.dragger
         var drg = el.drg || (el.drg = {
             element: el,
             width: el.outerWidth(),
             height: el.outerHeight()
         });
-        facade.locate(el, null, el.drg); //生成拖拽元素的坐标对象
-        for(var i = 0, n = droppers.length; i < n; i++) {
-            var drp = droppers[i];
+        draggable.locate(el, null, el.drg); //生成拖拽元素的坐标对象
+        for(var i = 0, drp; drp = droppers[i++];) {
             var config = drp.config;
             var activeClass = config.activeClass;
             var hoverClass = config.hoverClass;
@@ -110,7 +109,7 @@ define("droppable", ["mass.draggable"], function($) {
                 drp.element.addClass(activeClass);
             }
             //判定光标是否进入到dropper的内部
-            var isEnter = tolerance ? tolerance(event, drg, drp) : facade.contains(drp, xy);
+            var isEnter = tolerance ? tolerance(event, drg, drp) : draggable.contains(drp, xy);
             if(isEnter) {
                 if(!drp['isEnter']) { //如果是第一次进入,则触发dragenter事件
                     drp['isEnter'] = 1;
@@ -120,58 +119,58 @@ define("droppable", ["mass.draggable"], function($) {
                 } else { //标识已进入
                     type = "dragover";
                 }
-                facade.dispatch(event, dd, type);
+                draggable.dispatch(event, dd, type);
             } else { //如果光标离开放置对象
                 if(drp['isEnter']) {
                     hoverClass && drp.element.removeClass(hoverClass);
                     dd.dropper = drp.element; //处理覆盖多个靶场
-                    facade.dispatch(event, dd, "dragleave");
+                    draggable.dispatch(event, dd, "dragleave");
                     delete drp['isEnter'];
                 }
             }
         }
         droppers.actived = 1;
     }
-    facade.dropend = function(event, dd) {
+    draggable.dropend = function(event, dd) {
         if(!dd.droppable) return;
         delete dd.droppable;
         delete dd.dragger.drg;
-        for(var i = 0, drp; drp = facade.droppers[i++];) {
+        for(var i = 0, drp; drp = draggable.droppers[i++];) {
             var config = drp.config;
             config.activeClass && drp.element.removeClass(config.activeClass);
             if(drp['isEnter']) {
                 dd.dropper = drp.element;
-                facade.dispatch(event, dd, "drop");
+                draggable.dispatch(event, dd, "drop");
                 delete drp['isEnter'];
             }
         }
     }
     // 判定dropper是否包含dragger
-    facade.contains = function(dropper, dragger) {
+    draggable.contains = function(dropper, dragger) {
         return((dragger[0] || dragger.left) >= dropper.left && (dragger[0] || dragger.right) <= dropper.right && (dragger[1] || dragger.top) >= dropper.top && (dragger[1] || dragger.bottom) <= dropper.bottom);
     }
     // 求出两个方块的重叠面积
-    facade.overlap = function(dropper, dragger) {
+    draggable.overlap = function(dropper, dragger) {
         return Math.max(0, Math.min(dropper.bottom, dragger.bottom) - Math.max(dropper.top, dragger.top)) * Math.max(0, Math.min(dropper.right, dragger.right) - Math.max(dropper.left, dragger.left));
     }
-    facade.modes = {
+    draggable.modes = {
         // 拖动块是否与靶场相交，允许覆盖多个靶场
         intersect: function(event, dragger, dropper) {
-            return facade.contains(dropper, [event.pageX, event.pageY]) ? true : facade.overlap(dragger, dropper);
+            return draggable.contains(dropper, [event.pageX, event.pageY]) ? true : draggable.overlap(dragger, dropper);
         },
         // 判定光标是否在靶场之内
         pointer: function(event, dragger, dropper) {
-            return facade.contains(dropper, [event.pageX, event.pageY]);
+            return draggable.contains(dropper, [event.pageX, event.pageY]);
         },
         // 判定是否完全位于靶场
         fit: function(event, dragger, dropper) {
-            return facade.contains(dropper, dragger); //? 1 : 0
+            return draggable.contains(dropper, dragger); //? 1 : 0
         },
         // 至少有一半进入耙场才触发dragenter
         middle: function(event, dragger, dropper) {
-            return facade.contains(dropper, [dragger.left + dragger.width * .5, dragger.top + dragger.height * .5]) ;//? 1 : 0
+            return draggable.contains(dropper, [dragger.left + dragger.width * .5, dragger.top + dragger.height * .5]) ;//? 1 : 0
         }
     }
     return $;
 })
-//2013.1.19 优化facade.locate
+//2013.1.19 优化draggable.locate
