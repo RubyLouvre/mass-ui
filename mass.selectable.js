@@ -46,10 +46,16 @@ define("selectable",["mass.droppable"], function(){
             }
         });
         this.on("click", data.selector, function(event){
+            data._nodes.removeClass( data.selectingClass + " " + data.selectedClass )
+            if( data.draging ){
+                delete data.draging;
+                return
+            }
+             
             var drg = [event.pageX, event.pageY];
             var fn = draggable.contains;
             var hasSelected = false;
-            data._nodes.removeClass( data.selectingClass + " " + data.selectedClass )
+           
             for(var i = 0, drp; drp = selectable.droppers[i++];) {
                 if(!hasSelected){
                     var bool = fn(drp, drg);
@@ -67,6 +73,7 @@ define("selectable",["mass.droppable"], function(){
         })
         this.on("mousemove", data.selector, function(event){
             if( data.selecting ){
+                data.draging = true;
                 var x1 = data.opos[0], y1 = data.opos[1], x2 = event.pageX, y2 = event.pageY;
                 if (x1 > x2) {
                     var tmp = x2; x2 = x1; x1 = tmp;
@@ -122,6 +129,7 @@ define("selectable",["mass.droppable"], function(){
                 delete selectable.els;
                 delete data.selecting;
                 setTimeout(function(){
+                    delete  data.draging
                     data.helper.remove();
                 });
                 

@@ -1,0 +1,49 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>selectable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.selectable,ready",function($){
+
+                $('#selectable').selectable({
+                    selectend: function(){
+                        var result = $( "#select-result" ).empty();
+                        $.each( this,function() {
+                            var index = $( this ).index(  );
+                            result.append( " #" + ( index + 1 ) );
+                        });
+                    }
+                });
+            });
+        </script>
+
+        <h1>选择格子</h1>
+        <p><a href="index.html">返回</a></p>
+        <p id="feedback">
+            <span>You've selected:</span> <span id="select-result">none</span>.
+        </p>
+
+        <ol id="selectable">
+            <li class="ui-widget-content">Item 1</li>
+            <li class="ui-widget-content">Item 2</li>
+            <li class="ui-widget-content">Item 3</li>
+            <li class="ui-widget-content">Item 4</li>
+            <li class="ui-widget-content">Item 5</li>
+            <li class="ui-widget-content">Item 6</li>
+        </ol>
+
+    <style type="text/css">
+        #feedback { font-size: 1.4em; }
+        #selectable .ui-selecting { background: #FECA40; }
+        #selectable .ui-selected { background: #F39814; color: white; }
+        #selectable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+        #selectable li { margin: 3px; padding: 0.4em; font-size: 1.4em; height: 18px; }
+    </style></body>
+</html>
