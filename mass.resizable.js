@@ -127,19 +127,19 @@ define("resizable", ["mass.draggable"], function($) {
     }
 
     $.fn.resizable = function(hash) {
-        var data = $.mix({}, defaults, hash || {});
-        data.handles = data.handles.match($.rword) || ["all"];//
-        if(!/^(x|y|xy)$/.test(data.axis)) {
-            data.axis = ""; //如果用户没有指定,就禁止拖动
+        var config = $.mix({}, defaults, hash || {});
+        config.handles = config.handles.match($.rword) || ["all"];//
+        if(!/^(x|y|xy)$/.test(config.axis)) {
+            config.axis = ""; //如果用户没有指定,就禁止拖动
         }
-        data._aspectRatio = !! data.aspectRatio
+        config._aspectRatio = !! config.aspectRatio
         this.each(function() {
             if(this.nodeType == 1) {
                 //当鼠标在拖动元素上移动时,在它们靠近边缘的那一霎修改光标样式
-                $(this).bind('mousemove.resizable', data.selector, function(e) {
+                $(this).bind('mousemove.resizable', config.selector, function(e) {
                     var target = $(this)
                     if(facade.dragger) return;
-                    var dir = getDirection(e, target, data);
+                    var dir = getDirection(e, target, config);
                     $._data(this, "cursor", target.css("cursor"));//保存原来的光标样式
                     if(dir == "") {
                         target.css("cursor", "default");
@@ -153,11 +153,10 @@ define("resizable", ["mass.draggable"], function($) {
 
         })
         //在dragstart回调中,我们通过draggable已经设置了
-        //dd.startX = event.pageX; dd.startY = event.pageY;
-        //dd.originalX = offset.left;   dd.originalY = offset.top;
-        data.dragstart = function(e, external) {
-            var target = external.element;
-          //  console.log(external)
+        //data.startX = event.pageX;    data.startY = event.pageY;
+        //data.originalX = offset.left; data.originalY = offset.top;
+        config.dragstart = function(e, data) {
+            var target = data.element;
             var dir = getDirection(e, target, data);
             if(dir == '') return;
             $.mix(data, {
@@ -173,29 +172,28 @@ define("resizable", ["mass.draggable"], function($) {
             //等比例缩放
             data.aspectRatio = (typeof data.aspectRatio === "number") ? data.aspectRatio : ((data.startWidth / data.startHeight) || 1);
             e.type = "resizestart";
-            data.resizestart.call(target[0], e, external); //触发用户回调
+            data.resizestart.call(target[0], e, data); //触发用户回调
             $('body').css('cursor', dir + '-resize');
         }
-        data.drag = function(e, external) {
+        config.drag = function(e, data) {
             if(data.dir) {
-                var target = external.element;
-               // console.log(data.dir)
+                var target = data.element;
                 refresh(e, target, data);
                 e.type = "resize";
-                data.resize.call(target[0], e, external); //触发用户回调
+                data.resize.call(target[0], e, data); //触发用户回调
             }
         }
-        data.dragend = function(e, external) {
+        config.dragend = function(e, data) {
             if(data.dir) {
-                var target = external.element;
+                var target = data.element;
                 refresh(e, target, data);
                 delete data.dir;
                 e.type = "resizeend";
-                data.resizeend.call(target[0], e, external); //触发用户回调
+                data.resizeend.call(target[0], e, data); //触发用户回调
                 $('body').css("cursor", "default");
             }
         }
-        return this.draggable(data)
+        return this.draggable(config)
 
     }
     return $;
