@@ -38,7 +38,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 drag: fn
             }
         }
-        hash = hash || {}
+        hash = hash || {};
         //使用享元模式切割数据，防止每个匹配元素都缓存一个非常臃肿的配置对象
         //配置部分划为内蕴状态，一旦配置了不会随环境改变而改变
         //元素相关的部分划为外蕴状态，临时生成，用完即弃，同时用于暴露到外部(通过回调接口)
@@ -74,7 +74,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         //缓存数据
         this.data("draggable.internal",internal);
         if(internal.handle) { //处理手柄拖拽
-            this.find(internal.handle).data("draggable.internal",internal)
+            this.find(internal.handle).data("draggable.internal",internal);
         }
         //绑定事件
         var target = this;
@@ -90,13 +90,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     "dropinit dropstart drop dropend".replace($.rword, function(method) {
         facade[method] = $.noop;
     });
-    facade.dispatch = function(event, data, type) {
+    facade.dispatch = function(event, external, type) {
         //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
         event.type = type;
         event.namespace = "draggable";//注意这里
         event.namespace_re = rdrag;
-        var el = /drag/.test(type) ? data.dragger : data.dropper;
-        el.fire(event, data);
+        var el = /drag/.test(type) ? external.dragger : external.dropper;
+        el.fire(event, external);
     }
     //用于实现多点拖动
     facade.patch = function(event, data, callback, l, t) {
@@ -133,7 +133,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 return;
             }
         }
-        var external = $.data(node,"draggable.external",{});
+        var external = $.data(node,"draggable.external",$.mix({}, internal));
         var dragger = external.element = $(node); //本来打算要拖拽的元素
         external.scope = internal.scope;
         external.multi = internal.multi;
@@ -141,7 +141,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             var ghosting = node.cloneNode(false);
             node.parentNode.insertBefore(ghosting, node.nextSibling);
             if(internal.handle) {
-                dragger.find(internal.handle).appendTo(ghosting)
+                dragger.find(internal.handle).appendTo(ghosting);
             }
             if($.support.cssOpacity) {
                 ghosting.style.opacity = 0.4;
@@ -155,9 +155,10 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         if(node.setCapture) { //设置鼠标捕获
             node.setCapture();
         }
-        external.dragger = dragger; //实际上被拖动的元素
+       
         var offset = dragger.offset();
         internal.addClasses && dragger.addClass("mass_dragging");
+        external.dragger = dragger; //实际上被拖动的元素
         external.startX = event.pageX;
         external.startY = event.pageY;
         external.originalX = offset.left;
@@ -181,8 +182,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     if(c[0]) {
                         offset = c.offset();
                         external.limit = [offset.left + parseFloat(c.css("borderLeftWidth")), offset.top + parseFloat(c.css("borderTopWidth"))]
-                        external.limit[2] = external.limit[0] + c.innerWidth()
-                        external.limit[3] = external.limit[1] + c.innerHeight()
+                        external.limit[2] = external.limit[0] + c.innerWidth();
+                        external.limit[3] = external.limit[1] + c.innerHeight();
                     }
                 }
             }
@@ -215,7 +216,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             external.offsetX = external.deltaX + external.originalX;
             external.offsetY = external.deltaY + external.originalY;
             if(internal.axis.indexOf("x") != -1) { //如果没有锁定X轴left,top,right,bottom
-                var left = external.limit ? Math.min(external.limit[2], Math.max(external.limit[0], external.offsetX)) : external.offsetX
+                var left = external.limit ? Math.min(external.limit[2], Math.max(external.limit[0], external.offsetX)) : external.offsetX;
                 node.style.left = left + "px";
             }
             if(internal.axis.indexOf("y") != -1) { //如果没有锁定Y轴
@@ -295,7 +296,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             if(external.dragtype == "drag" && internal.click === false) { //阻止"非刻意"的点击事件,因为我们每点击页面,都是依次触发mousedown mouseup click事件
                 $.event.fireType = "click";
                 setTimeout(function() {
-                    delete $.event.fireType
+                    delete $.event.fireType;
                 }, 30);
                 external.dragtype = "dragend";
             }
@@ -310,7 +311,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
 
     function dragstop() { //如果鼠标超出了拖动块的范围,则中断拖拽
         if(facade.dragger) {
-            var node = facade.dragger
+            var node = facade.dragger;
             var external = $.data(node, "draggable.external");
             if(external.event) {
                 var offset = $(node).offset(),
@@ -320,14 +321,14 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 pageX = event.pageX,
                 pageY = event.pageY
                 if(pageX < left || pageY < top || pageX > left + node.offsetWidth || pageY > top + node.offsetHeight) {
-                    dragend(event)
+                    dragend(event);
                 }
             }
         }
     }
 
-    $doc.on(ondrag + ".draggable", drag)
-    $doc.on(onend + ".draggable blur.draggable", dragend)
+    $doc.on(ondrag + ".draggable", drag);
+    $doc.on(onend + ".draggable blur.draggable", dragend);
 
     return $;
 });

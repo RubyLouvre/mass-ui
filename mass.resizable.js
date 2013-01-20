@@ -117,6 +117,7 @@ define("resizable", ["mass.draggable"], function($) {
                 }
             }
         }
+        console.log(target)
         target.css({
             left: data.left,
             top: data.top,
@@ -154,8 +155,9 @@ define("resizable", ["mass.draggable"], function($) {
         //在dragstart回调中,我们通过draggable已经设置了
         //dd.startX = event.pageX; dd.startY = event.pageY;
         //dd.originalX = offset.left;   dd.originalY = offset.top;
-        data.dragstart = function(e, data) {
-            var target = data.element
+        data.dragstart = function(e, external) {
+            var target = external.element;
+          //  console.log(external)
             var dir = getDirection(e, target, data);
             if(dir == '') return;
             $.mix(data, {
@@ -171,24 +173,25 @@ define("resizable", ["mass.draggable"], function($) {
             //等比例缩放
             data.aspectRatio = (typeof data.aspectRatio === "number") ? data.aspectRatio : ((data.startWidth / data.startHeight) || 1);
             e.type = "resizestart";
-            data.resizestart.call(target[0], e, data); //触发用户回调
+            data.resizestart.call(target[0], e, external); //触发用户回调
             $('body').css('cursor', dir + '-resize');
         }
-        data.drag = function(e, data) {
+        data.drag = function(e, external) {
             if(data.dir) {
-                var target = data.element;
+                var target = external.element;
+               // console.log(data.dir)
                 refresh(e, target, data);
                 e.type = "resize";
-                data.resize.call(data.element[0], e, data); //触发用户回调
+                data.resize.call(target[0], e, external); //触发用户回调
             }
         }
-        data.dragend = function(e, data) {
+        data.dragend = function(e, external) {
             if(data.dir) {
-                var target = data.element;
+                var target = external.element;
                 refresh(e, target, data);
                 delete data.dir;
                 e.type = "resizeend";
-                data.resizeend.call(data.element[0], e, data); //触发用户回调
+                data.resizeend.call(target[0], e, external); //触发用户回调
                 $('body').css("cursor", "default");
             }
         }

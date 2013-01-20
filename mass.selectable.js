@@ -14,6 +14,9 @@ define("selectable",["mass.resizable","mass.droppable"], function(){
         unselected: null,
         unselecting: null
     }
+    $("html").draggable({
+         selector: ".ui-selectable-helper"
+        })
     $.fn.selectable = function(hash){
         var config = $.mix({}, defaults, hash || {})
         config.selector = config.filter;

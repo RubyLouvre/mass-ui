@@ -7,8 +7,8 @@ define("droppable", ["mass.draggable"], function($) {
         scope: "default",
         tolerance: "intersect"
     }
-    var facade = $.fn.draggable
-    facade.scopes = {}
+    var facade = $.fn.draggable;
+    facade.scopes = {};
     $.fn.droppable = function(hash) {
         if(typeof hash == "function") {//如果只传入函数,那么当作是drop自定义事件的回调
             var fn = hash;
@@ -69,11 +69,11 @@ define("droppable", ["mass.draggable"], function($) {
                 if(typeof config.drop == "function") {
                     el.on("drop.draggable", config.drop);
                 }
-                return facade.locate(el, config)
+                return facade.locate(el, config);
             });
         } else {
             this.nodes = [];
-            this.droppers = false
+            this.droppers = false;
         }
     }
     facade.dropstart = function(event, dd, node) {
@@ -90,7 +90,7 @@ define("droppable", ["mass.draggable"], function($) {
     }
     facade.drop = function(event, dd) {
         //此事件在draggable的drag事件上执行
-        if(!dd.droppable) return
+        if(!dd.droppable) return;
         var xy = [event.pageX, event.pageY];
         var droppers = facade.droppers;
         var el = dd.dragger
@@ -161,15 +161,15 @@ define("droppable", ["mass.draggable"], function($) {
         },
         // 判定光标是否在靶场之内
         pointer: function(event, dragger, dropper) {
-            return facade.contains(dropper, [event.pageX, event.pageY])
+            return facade.contains(dropper, [event.pageX, event.pageY]);
         },
         // 判定是否完全位于靶场
         fit: function(event, dragger, dropper) {
-            return facade.contains(dropper, dragger) //? 1 : 0
+            return facade.contains(dropper, dragger); //? 1 : 0
         },
         // 至少有一半进入耙场才触发dragenter
         middle: function(event, dragger, dropper) {
-            return facade.contains(dropper, [dragger.left + dragger.width * .5, dragger.top + dragger.height * .5]) //? 1 : 0
+            return facade.contains(dropper, [dragger.left + dragger.width * .5, dragger.top + dragger.height * .5]) ;//? 1 : 0
         }
     }
     return $;
