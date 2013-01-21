@@ -133,6 +133,7 @@ define("selectable",["mass.droppable"], function($){
                 data.select.call(selectable.nodes, event, data );
             }
         }
+        draggable.clearSelection();
     }
     //当鼠标弹起，完成选择，统一冒泡到HTML节点进行处理
     $(document.documentElement).on("mouseup", function(event){
