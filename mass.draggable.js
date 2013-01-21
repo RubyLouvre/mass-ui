@@ -110,13 +110,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         }
     }
-    facade.clearSelection = window.getSelection ?
-    function() {
-        window.getSelection().removeAllRanges();
-    } : function() {
-        document.selection.clear();
+    facade.textselect = function( bool ){
+        $( document )[ bool ? "unbind" : "bind" ]("selectstart", function(){
+            return false;
+        } )
+        .css( "-user-select", bool ? "" : "none" );
+        document.unselectable = bool ? "off" : "on";
     }
-
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
         var internal = $.data(node, "draggable.internal");
@@ -194,6 +194,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
 
         if(!multi) { //处理多点拖拽
+            facade.textselect(false);
             facade.dropinit(event, external, node);
             facade.patch(event, external, dragstart); //自己调用自己
             if(internal.strict) { //防止隔空拖动，为了性能起见，150ms才检测一下
@@ -260,7 +261,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     }
                 }
             }
-            facade.clearSelection(); //清理文档中的文本选择
+            //facade.clearSelection(); //清理文档中的文本选择
             facade.dispatch(event, external, "drag"); //处理drag回调
             facade.drop(event, external, node);
             if(!multi) { //处理多点拖拽
@@ -301,6 +302,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 external.dragtype = "dragend";
             }
             if(!multi) {
+                facade.textselect(true);
                 facade.patch(event, external, dragend);
                 delete facade.dragger;
             }

@@ -50,11 +50,11 @@ define("selectable",["mass.droppable"], function($){
     }
 
     function handleSelectStart(event){
-        $.log("handleSelectStart")
         var data = event.handleObj;
         if(!data.selectingClass){
             return
         }
+        draggable.textselect(false);
         selectable.data = data;//公开到全局，方便让其他回调也能访问到
         $(data.appendTo).append(data.helper);//创建一个临时节点，用于显示选择区域
         data.helper.css({
@@ -141,10 +141,10 @@ define("selectable",["mass.droppable"], function($){
                 data.select.call(selectable.nodes, event, data );
             }
         }
-        draggable.clearSelection();
     }
     //当鼠标弹起，完成选择，统一冒泡到HTML节点进行处理
     $(document.documentElement).on("mouseup", function(event){
+        draggable.textselect(true);
         var data = selectable.data
         if( data ){
             //  $.log("selectend", 7);
