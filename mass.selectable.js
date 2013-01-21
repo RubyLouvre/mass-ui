@@ -18,7 +18,7 @@ define("selectable",["mass.droppable"], function($){
         data.helper = $("<div class='ui-selectable-helper'></div>");
         data["this"] = this;
         this.data("selectable",data);
-        this.on("mousedown", data.selector, data, handleSelectStart);
+        this.on("mousedown.selectable", data.selector, data, handleSelectStart);
         this.on("click",     data.selector, data, handleSelectClick);
         this.on("mousemove", data.selector, data, handleSelectDrag);
         return this;
@@ -50,6 +50,7 @@ define("selectable",["mass.droppable"], function($){
     }
 
     function handleSelectStart(event){
+        $.log("handleSelectStart")
         var data = event.handleObj;
         if(!data.selectingClass){
             return
@@ -57,6 +58,7 @@ define("selectable",["mass.droppable"], function($){
         selectable.data = data;//公开到全局，方便让其他回调也能访问到
         $(data.appendTo).append(data.helper);//创建一个临时节点，用于显示选择区域
         data.helper.css({
+            display:"none",
             left: event.pageX,
             top:  event.pageY,
             width: 0,
@@ -68,6 +70,7 @@ define("selectable",["mass.droppable"], function($){
             backgroundColor:"#fff",
             opacity:.5
         });
+
         data.opos = [event.pageX, event.pageY];
         //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
@@ -90,6 +93,11 @@ define("selectable",["mass.droppable"], function($){
     function handleSelectDrag(event){
         var data = selectable.data
         if( data ){
+            if(!data._reflow_one_time){
+                data.helper.css("display","block")
+                data._reflow_one_time = 1;
+            }
+
             //处理动态生成的选择区域
             var x1 = data.opos[0], y1 = data.opos[1], x2 = event.pageX, y2 = event.pageY;
             if (x1 > x2) {
@@ -139,7 +147,7 @@ define("selectable",["mass.droppable"], function($){
     $(document.documentElement).on("mouseup", function(event){
         var data = selectable.data
         if( data ){
-          //  $.log("selectend", 7);
+            //  $.log("selectend", 7);
             $(selectable.nodes).replaceClass(data.selectingClass, data.selectedClass);
             if($.isFunction( data.selectend )){
                 event.type = "selectend";
@@ -147,6 +155,7 @@ define("selectable",["mass.droppable"], function($){
             }
             selectable.nodes = [];
             delete selectable.data;
+            delete data._reflow_one_time
             setTimeout(function(){
                 data.helper.remove();
             });
