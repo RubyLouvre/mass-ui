@@ -31,7 +31,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *   duration：Number 当ghosting或revert为true，它会执行一个平滑的动画到目的地，这是它的持续时间，默认是500ms。
      *
      */
-    var facade = $.fn.draggable = function(hash) {
+    var draggable = $.fn.draggable = function(hash) {
         if(typeof hash == "function") {//如果只传入函数,那么当作是drag自定义事件的回调
             var fn = hash;
             hash = {
@@ -88,9 +88,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         return this;
     }
     "dropinit dropstart drop dropend".replace($.rword, function(method) {
-        facade[method] = $.noop;
+        draggable[method] = $.noop;
     });
-    facade.dispatch = function(event, external, type) {
+    draggable.dispatch = function(event, external, type) {
         //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
         event.type = type;
         event.namespace = "draggable";//注意这里
@@ -99,7 +99,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         el.fire(event, external);
     }
     //用于实现多点拖动
-    facade.patch = function(event, data, callback, l, t) {
+    draggable.patch = function(event, data, callback, l, t) {
         var elements = data.multi,
         check = data.element[0]
         if(elements && $.isArrayLike(elements) && elements.length > 0) {
@@ -110,9 +110,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         }
     }
-    facade.textselect = function( bool ){
+    draggable.textselect = function( bool ){
         $( document )[ bool ? "unbind" : "bind" ]("selectstart", function(){
-            return false;
+            return false;//支持情况 Firefox/Opera不支持onselectstart事件 http://www.cnblogs.com/snandy/archive/2011/06/01/2067283.html
         } )
         .css( "-user-select", bool ? "" : "none" );
         document.unselectable = bool ? "off" : "on";
@@ -164,8 +164,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         external.originalX = offset.left;
         external.originalY = offset.top;
         external.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
-        facade.dispatch(event, external, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
-        facade.dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
+        draggable.dispatch(event, external, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
+        draggable.dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
         var limit = internal.containment;//处理区域鬼拽,确认可活动的范围
         if(limit) {
             if($.isArray(limit) && limit.length == 4) { //如果传入的是坐标 [x1,y1,x2,y2] left,top,right,bottom
@@ -194,19 +194,19 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         }
 
         if(!multi) { //处理多点拖拽
-            facade.textselect(false);
-            facade.dropinit(event, external, node);
-            facade.patch(event, external, dragstart); //自己调用自己
+            draggable.textselect(false);
+            draggable.dropinit(event, external, node);
+            draggable.patch(event, external, dragstart); //自己调用自己
             if(internal.strict) { //防止隔空拖动，为了性能起见，150ms才检测一下
                 external.intervalID = setInterval(dragstop, 150);
             }
         }
-        facade.dropstart(event, external, node);
+        draggable.dropstart(event, external, node);
     }
 
     function drag(event, multi, docLeft, docTop) {
-        if(facade.dragger) {
-            var node = multi || facade.dragger;
+        if(draggable.dragger) {
+            var node = multi || draggable.dragger;
             var internal = $.data(node, "draggable.internal");
             var external = $.data(node, "draggable.external");
             external.event = event; //这个供dragstop API调用
@@ -261,19 +261,19 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     }
                 }
             }
-            //facade.clearSelection(); //清理文档中的文本选择
-            facade.dispatch(event, external, "drag"); //处理drag回调
-            facade.drop(event, external, node);
+            //draggable.clearSelection(); //清理文档中的文本选择
+            draggable.dispatch(event, external, "drag"); //处理drag回调
+            draggable.drop(event, external, node);
             if(!multi) { //处理多点拖拽
-                facade.patch(event, external, drag, docLeft, docTop);
+                draggable.patch(event, external, drag, docLeft, docTop);
             }
 
         }
     }
 
     function dragend(event, multi) {
-        if(facade.dragger || multi) {
-            var node = multi || facade.dragger
+        if(draggable.dragger || multi) {
+            var node = multi || draggable.dragger
             var dragger = $(node);
             var internal = $.data(node, "draggable.internal");
             var external = $.data(node, "draggable.external");
@@ -292,8 +292,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 }, 500);
             }
           
-            facade.dropend(event, external, node); //先执行dropend回调
-            facade.dispatch(event, external, "dragend"); //再执行dragend回调
+            draggable.dropend(event, external, node); //先执行dropend回调
+            draggable.dispatch(event, external, "dragend"); //再执行dragend回调
             if(external.dragtype == "drag" && internal.click === false) { //阻止"非刻意"的点击事件,因为我们每点击页面,都是依次触发mousedown mouseup click事件
                 $.event.fireType = "click";
                 setTimeout(function() {
@@ -302,9 +302,9 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 external.dragtype = "dragend";
             }
             if(!multi) {
-                facade.textselect(true);
-                facade.patch(event, external, dragend);
-                delete facade.dragger;
+                draggable.textselect(true);
+                draggable.patch(event, external, dragend);
+                delete draggable.dragger;
             }
             dragger.removeData("draggable.external");
             internal.ghosting && dragger.remove(); //再移除幽灵元素
@@ -312,8 +312,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     }
 
     function dragstop() { //如果鼠标超出了拖动块的范围,则中断拖拽
-        if(facade.dragger) {
-            var node = facade.dragger;
+        if(draggable.dragger) {
+            var node = draggable.dragger;
             var external = $.data(node, "draggable.external");
             if(external.event) {
                 var offset = $(node).offset(),

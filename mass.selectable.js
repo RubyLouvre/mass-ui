@@ -19,8 +19,8 @@ define("selectable",["mass.droppable"], function($){
         data["this"] = this;
         this.data("selectable",data);
         this.on("mousedown.selectable", data.selector, data, handleSelectStart);
-        this.on("click",     data.selector, data, handleSelectClick);
-        this.on("mousemove", data.selector, data, handleSelectDrag);
+        this.on("click.selectable",     data.selector, data, handleSelectClick);
+        this.on("mousemove.selectable", data.selector, data, handleSelectDrag);
         return this;
     }
     selectable.droppers = [];
@@ -54,7 +54,7 @@ define("selectable",["mass.droppable"], function($){
         if(!data.selectingClass){
             return
         }
-        draggable.textselect(false);
+        draggable.textselect(false);//阻止文本被选择
         selectable.data = data;//公开到全局，方便让其他回调也能访问到
         $(data.appendTo).append(data.helper);//创建一个临时节点，用于显示选择区域
         data.helper.css({
@@ -68,9 +68,8 @@ define("selectable",["mass.droppable"], function($){
             borderStyle:"dotted",
             borderColor:"#ccc",
             backgroundColor:"#fff",
-            opacity:.5
+            opacity:.3
         });
-
         data.opos = [event.pageX, event.pageY];
         //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
@@ -147,7 +146,6 @@ define("selectable",["mass.droppable"], function($){
         draggable.textselect(true);
         var data = selectable.data
         if( data ){
-            //  $.log("selectend", 7);
             $(selectable.nodes).replaceClass(data.selectingClass, data.selectedClass);
             if($.isFunction( data.selectend )){
                 event.type = "selectend";
@@ -155,7 +153,7 @@ define("selectable",["mass.droppable"], function($){
             }
             selectable.nodes = [];
             delete selectable.data;
-            delete data._reflow_one_time
+            delete data._reflow_one_time;
             setTimeout(function(){
                 data.helper.remove();
             });
