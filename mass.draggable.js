@@ -1,11 +1,11 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var $doc = $(document.documentElement),
-    //支持触模设备
-    supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
-    onstart = supportTouch ? "touchstart" : "mousedown",
-    ondrag = supportTouch ? "touchmove" : "mousemove",
-    onend = supportTouch ? "touchend" : "mouseup",
-    rdrag = new RegExp("(^|\\.)draggable(\\.|$)")
+        //支持触模设备
+        supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
+        onstart = supportTouch ? "touchstart" : "mousedown",
+        ondrag = supportTouch ? "touchmove" : "mousemove",
+        onend = supportTouch ? "touchend" : "mouseup",
+        rdrag = new RegExp("(^|\\.)draggable(\\.|$)");
     /**
      *
      *  containment：规定拖动块可活动的范围。有五种情况.
@@ -32,68 +32,68 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
      *
      */
     var draggable = $.fn.draggable = function(hash) {
-        if(typeof hash == "function") {//如果只传入函数,那么当作是drag自定义事件的回调
-            var fn = hash;
-            hash = {
-                drag: fn
+            if(typeof hash == "function") { //如果只传入函数,那么当作是drag自定义事件的回调
+                var fn = hash;
+                hash = {
+                    drag: fn
+                }
             }
+            hash = hash || {};
+            //使用享元模式切割数据，防止每个匹配元素都缓存一个非常臃肿的配置对象
+            //配置部分划为内蕴状态，一旦配置了不会随环境改变而改变
+            //元素相关的部分划为外蕴状态，临时生成，用完即弃，并包含配置数据，同时用于暴露到外部(通过回调接口)
+            var internal = $.mix({
+                scope: "default",
+                addClasses: true
+            }, hash);
+            $.mix(internal, {
+                multi: $.isArrayLike(hash.multi) ? hash.multi : null,
+                handle: typeof hash.handle == "string" ? hash.handle : null,
+                scroll: typeof hash.scroll == "boolean" ? hash.scroll : true,
+                returning: typeof hash.returning == "boolean" ? hash.returning : true
+            });
+            //处理滚动相关
+            if(internal.scroll) {
+                internal.scrollSensitivity = hash.scrollSensitivity >= 0 ? hash.scrollSensitivity : 20;
+                internal.scrollSpeed = hash.scrollSensitivity >= 0 ? hash.scrollSpeed : 20;
+                internal.scrollParent = this.scrollParent()[0]
+                internal.overflowOffset = this.scrollParent().offset();
+            }
+            //处理方向拖拽
+            if(internal.axis !== "" && !/^(x|y|xy)$/.test(internal.axis)) {
+                internal.axis = "xy";
+            }
+            //添加表示能拖放的样式
+            if(!internal.noCursor) {
+                if(internal.handle) {
+                    this.find(internal.handle).css('cursor', 'move');
+                } else {
+                    this.css('cursor', 'move');
+                }
+            }
+            //缓存数据
+            this.data("draggable.internal", internal);
+            if(internal.handle) { //处理手柄拖拽
+                this.find(internal.handle).data("draggable.internal", internal);
+            }
+            //绑定事件
+            var target = this;
+            "dragstart drag dragend dragenter dragover dragleave drop".replace($.rword, function(event) {
+                var fn = hash[event];
+                if(typeof fn == "function") {
+                    target.on(event + ".draggable", fn);
+                }
+            });
+            this.on(onstart + ".draggable", internal.handle, dragstart); //绑定拖动事件
+            return this;
         }
-        hash = hash || {};
-        //使用享元模式切割数据，防止每个匹配元素都缓存一个非常臃肿的配置对象
-        //配置部分划为内蕴状态，一旦配置了不会随环境改变而改变
-        //元素相关的部分划为外蕴状态，临时生成，用完即弃，并包含配置数据，同时用于暴露到外部(通过回调接口)
-        var internal = $.mix({
-            scope: "default",
-            addClasses: true
-        }, hash);
-        $.mix(internal, {
-            multi: $.isArrayLike(hash.multi) ? hash.multi : null,
-            handle: typeof hash.handle == "string" ? hash.handle : null,
-            scroll: typeof hash.scroll == "boolean" ? hash.scroll : true,
-            returning: typeof hash.returning == "boolean" ? hash.returning : true
+        "dropinit dropstart drop dropend".replace($.rword, function(method) {
+            draggable[method] = $.noop;
         });
-        //处理滚动相关
-        if(internal.scroll) {
-            internal.scrollSensitivity = hash.scrollSensitivity >= 0 ? hash.scrollSensitivity : 20;
-            internal.scrollSpeed = hash.scrollSensitivity >= 0 ? hash.scrollSpeed : 20;
-            internal.scrollParent = this.scrollParent()[0]
-            internal.overflowOffset = this.scrollParent().offset();
-        }
-        //处理方向拖拽
-        if(internal.axis !== "" && !/^(x|y|xy)$/.test(internal.axis)) {
-            internal.axis = "xy";
-        }
-        //添加表示能拖放的样式
-        if(!internal.noCursor) {
-            if(internal.handle) {
-                this.find(internal.handle).css('cursor', 'move');
-            } else {
-                this.css('cursor', 'move');
-            }
-        }
-        //缓存数据
-        this.data("draggable.internal",internal);
-        if(internal.handle) { //处理手柄拖拽
-            this.find(internal.handle).data("draggable.internal",internal);
-        }
-        //绑定事件
-        var target = this;
-        "dragstart drag dragend dragenter dragover dragleave drop".replace($.rword, function(event) {
-            var fn = hash[event];
-            if(typeof fn == "function") {
-                target.on(event + ".draggable", fn);
-            }
-        });
-        this.on(onstart + ".draggable", internal.handle, dragstart); //绑定拖动事件
-        return this;
-    }
-    "dropinit dropstart drop dropend".replace($.rword, function(method) {
-        draggable[method] = $.noop;
-    });
     draggable.dispatch = function(event, external, type) {
         //用于触发用户绑定的dragstart drag dragend回调, 第一个参数为事件对象, 第二个为dd对象
         event.type = type;
-        event.namespace = "draggable";//注意这里
+        event.namespace = "draggable"; //注意这里
         event.namespace_re = rdrag;
         var el = /drag/.test(type) ? external.dragger : external.dropper;
         el.fire(event, external);
@@ -101,7 +101,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     //用于实现多点拖动
     draggable.patch = function(event, data, callback, l, t) {
         var elements = data.multi,
-        check = data.element[0]
+            check = data.element[0]
         if(elements && $.isArrayLike(elements) && elements.length > 0) {
             for(var j = 0, node; node = elements[j]; j++) {
                 if(node != check) { //防止环引用，导致死循环
@@ -110,13 +110,13 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             }
         }
     }
-    draggable.textselect = function( bool ){
-        $( document )[ bool ? "unbind" : "bind" ]("selectstart", function(){
-            return false;//支持情况 Firefox/Opera不支持onselectstart事件 http://www.cnblogs.com/snandy/archive/2011/06/01/2067283.html
-        } )
-        .css( "-user-select", bool ? "" : "none" );
+    draggable.textselect = function(bool) {
+        $(document)[bool ? "unbind" : "bind"]("selectstart", function() {
+            return false; //支持情况 Firefox/Opera不支持onselectstart事件 http://www.cnblogs.com/snandy/archive/2011/06/01/2067283.html
+        }).css("-user-select", bool ? "" : "none");
         document.unselectable = bool ? "off" : "on";
     }
+
     function dragstart(event, multi) {
         var node = multi || event.delegateTarget || event.currentTarget; //如果是多点拖动，存在第二个参数
         var internal = $.data(node, "draggable.internal");
@@ -133,7 +133,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 return;
             }
         }
-        var external = $.data(node,"draggable.external",$.mix({}, internal));
+        var external = $.data(node, "draggable.external", $.mix({}, internal));
         var dragger = external.element = $(node); //本来打算要拖拽的元素
         external.scope = internal.scope;
         external.multi = internal.multi;
@@ -155,7 +155,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         if(node.setCapture) { //设置鼠标捕获
             node.setCapture();
         }
-       
+
         var offset = dragger.offset();
         internal.addClasses && dragger.addClass("mass_dragging");
         external.dragger = dragger; //实际上被拖动的元素
@@ -166,7 +166,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         external.dragtype = "dragstart"; //    先执行dragstart ,再执行dropstart
         draggable.dispatch(event, external, "dragstart"); //处理dragstart回调，我们可以在这里重设dragger与multi
         draggable.dragger = dragger[0]; //暴露到外围作用域，供drag与dragend与dragstop调用
-        var limit = internal.containment;//处理区域鬼拽,确认可活动的范围
+        var limit = internal.containment; //处理区域鬼拽,确认可活动的范围
         if(limit) {
             if($.isArray(limit) && limit.length == 4) { //如果传入的是坐标 [x1,y1,x2,y2] left,top,right,bottom
                 external.limit = limit;
@@ -291,7 +291,7 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     top: internal.revert ? external.originalY : external.offsetY
                 }, 500);
             }
-          
+
             draggable.dropend(event, external, node); //先执行dropend回调
             draggable.dispatch(event, external, "dragend"); //再执行dragend回调
             if(external.dragtype == "drag" && internal.click === false) { //阻止"非刻意"的点击事件,因为我们每点击页面,都是依次触发mousedown mouseup click事件
@@ -317,11 +317,11 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             var external = $.data(node, "draggable.external");
             if(external.event) {
                 var offset = $(node).offset(),
-                left = offset.left,
-                top = offset.top,
-                event = external.event,
-                pageX = event.pageX,
-                pageY = event.pageY
+                    left = offset.left,
+                    top = offset.top,
+                    event = external.event,
+                    pageX = event.pageX,
+                    pageY = event.pageY
                 if(pageX < left || pageY < top || pageX > left + node.offsetWidth || pageY > top + node.offsetHeight) {
                     dragend(event);
                 }
