@@ -16,7 +16,7 @@
                     selectend: function(){
                         var result = $( "#select-result" ).empty();
                         $.each( this,function() {
-                            var index = $( this ).index(  );
+                            var index = $( this ).index();
                             result.append( " #" + ( index + 1 ) );
                         });
                     }
