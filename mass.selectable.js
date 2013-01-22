@@ -18,15 +18,15 @@ define("selectable", ["mass.droppable"], function($) {
     var draggable = $.fn.draggable;
 
     var selectable = $.fn.selectable = function(hash) {
-            var data = $.mix({}, defaults, hash || {})
-            data.helper = $("<div class='ui-selectable-helper'></div>");
-            data["this"] = this;
-            this.data("selectable", data);
-            this.on("mousedown.selectable", data.selector, data, handleSelectStart);
-            this.on("click.selectable", data.selector, data, handleSelectClick);
-            this.on("mousemove.selectable", data.selector, data, handleSelectDrag);
-            return this;
-        }
+        var data = $.mix({}, defaults, hash || {})
+        data.helper = $("<div class='ui-selectable-helper'></div>");
+        data["this"] = this;
+        this.data("selectable", data);
+        this.on("mousedown.selectable", data.selector, data, handleSelectStart);
+        this.on("click.selectable", data.selector, data, handleSelectClick);
+        this.on("mousemove.selectable", data.selector, data, handleSelectDrag);
+        return this;
+    }
     selectable.droppers = [];
     //通过点击事件霎间完成选择
 
@@ -78,6 +78,7 @@ define("selectable", ["mass.droppable"], function($) {
         });
         data.opos = [event.pageX, event.pageY];
         //如果使用了事件代理，则在原基础上找到那被代理的元素
+         //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
         //再过滤那些不配被选中的子元素
         nodes = nodes.children(data.filter);
@@ -107,9 +108,9 @@ define("selectable", ["mass.droppable"], function($) {
 
             //处理动态生成的选择区域
             var x1 = data.opos[0],
-                y1 = data.opos[1],
-                x2 = event.pageX,
-                y2 = event.pageY;
+            y1 = data.opos[1],
+            x2 = event.pageX,
+            y2 = event.pageY;
             if(x1 > x2) {
                 var tmp = x2;
                 x2 = x1;
