@@ -1,4 +1,4 @@
-define("selectable", ["mass.droppable"], function($) {
+﻿define("selectable", ["mass.droppable"], function($) {
     var defaults = {
         appendTo: "body",
         filter: "*",
@@ -78,7 +78,7 @@ define("selectable", ["mass.droppable"], function($) {
         });
         data.opos = [event.pageX, event.pageY];
         //如果使用了事件代理，则在原基础上找到那被代理的元素
-         //如果使用了事件代理，则在原基础上找到那被代理的元素
+        //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
         //再过滤那些不配被选中的子元素
         nodes = nodes.children(data.filter);
@@ -158,7 +158,8 @@ define("selectable", ["mass.droppable"], function($) {
         }
     }
     //当鼠标弹起，完成选择，统一冒泡到HTML节点进行处理
-    $(document.documentElement).on("mouseup", function(event) {
+    //   $(document.documentElement).on("mouseup", function(event) {
+    function handleSelectEnd(event){
         draggable.textselect(true);
         var data = selectable.data;
         if(data) {
@@ -174,7 +175,7 @@ define("selectable", ["mass.droppable"], function($) {
                 data.helper.remove();
             });
         }
-    })
-
+    }
+    draggable.dropscene.push(handleSelectEnd)
     return $;
 })
