@@ -14,8 +14,8 @@
                 $('.drag').click(function(){
                     $(this).toggleClass("selected")
                 }).draggable({
-                    dragstart:function(e, dd){
-                        dd.multi = $('.selected');
+                    dragstart:function(e, data){
+                        data.multi = $('.selected');
                     }
                 });
             });

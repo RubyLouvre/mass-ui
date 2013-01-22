@@ -23,7 +23,7 @@ define("droppable", ["mass.draggable"], function($) {
         data.tolerance = typeof data.tolerance === "function" ? data.tolerance : draggable.modes[data.tolerance];
         this.data("droppable", data);
         var queue = draggable.scopes["#" + data.scope] || (draggable.scopes["#" + data.scope]  = [])
-        queue.push(data)
+        queue.push(data);
         return this;
     }
     //取得放置对象的坐标宽高等信息
