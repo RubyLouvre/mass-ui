@@ -4,20 +4,50 @@
  */
 define("sortable",["mass.droppable"], function($){
     var defaults = {
-       filter: "*"
+        filter: "*"
     }
-    $.fn.sortable = function(hash) {
+    var sortable =  $.fn.sortable = function(hash) {
         var data = $.mix({}, defaults, hash || {})
-      //  data.helper = $("<div class='ui-selectable-helper'></div>");
+        //  data.helper = $("<div class='ui-selectable-helper'></div>");
         data["this"] = this;
         this.data("sortable", data);
         this.on("mousedown.sortable", data.selector, data, handleSortStart);
         this.on("mousemove.sortable", data.selector, data, handleSortDrag);
         return this;
     }
-    function handleSortStart(){
-        
+    var draggable = $.fn.draggable;
+    function handleSortStart(event){
+        var inner = event.handleObj;
+
+        //如果使用了事件代理，则在原基础上找到那被代理的元素
+        //如果使用了事件代理，则在原基础上找到那被代理的元素
+        var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
+        //再过滤那些不配被选中的子元素
+        nodes = nodes.children(data.filter);
+        //批量生成放置元素的坐标对象
+        var els = []
+        sortable.candidates = $.map(nodes, function() {
+            els.push(this);
+            return draggable.locate($(this));
+        });
+        var dragger = $(this)
+        var offset = dragger.offset();
+        var data = $.mix({ }, inner,
+        {
+            opos: [event.pageX, event.pageY],
+            dragger: dragger,//实际上被拖动的元素
+            startX: event.pageX,
+            startY: event.pageY,
+            originalX: offset.left,
+            originalY: offset.top
+        })
+
+        if($.isFunction(data.sortstart)) {
+            event.type = "selectstart";
+            data.sortstart.call(els, event, data)
+        }
     }
+    function handleSortDrag (){}
     return $;
 })
 /*

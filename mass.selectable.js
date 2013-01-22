@@ -30,7 +30,6 @@
     selectable.droppers = [];
     //通过点击事件霎间完成选择
 
-
     function handleSelectClick(event) {
         var data = event.handleObj;
         if(!data.selectingClass) {
