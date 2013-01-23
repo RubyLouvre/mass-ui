@@ -18,19 +18,7 @@ define("sortable",["mass.droppable"], function($){
     var draggable = $.fn.draggable;
     function handleSortStart(event){
         var inner = event.handleObj;
-
-        //如果使用了事件代理，则在原基础上找到那被代理的元素
-        //如果使用了事件代理，则在原基础上找到那被代理的元素
-        var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
-        //再过滤那些不配被选中的子元素
-        nodes = nodes.children(data.filter);
-        //批量生成放置元素的坐标对象
-        var els = []
-        sortable.candidates = $.map(nodes, function() {
-            els.push(this);
-            return draggable.locate($(this));
-        });
-        var dragger = $(this)
+        var dragger = $(event.target)
         var offset = dragger.offset();
         var data = $.mix({ }, inner,
         {
@@ -40,14 +28,39 @@ define("sortable",["mass.droppable"], function($){
             startY: event.pageY,
             originalX: offset.left,
             originalY: offset.top
-        })
-
+        });
+        //如果使用了事件代理，则在原基础上找到那被代理的元素
+        var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
+        //再过滤那些不配被选中的子元素
+        nodes = nodes.children(data.filter);
+        //批量生成放置元素的坐标对象
+        var els = []
+        data.candidates = $.map(nodes, function() {
+            els.push(this);
+            return draggable.locate($(this));
+        });
         if($.isFunction(data.sortstart)) {
-            event.type = "selectstart";
+            event.type = "sortstart";
             data.sortstart.call(els, event, data)
         }
+        sortable.data = data;
     }
-    function handleSortDrag (){}
+    function handleSortDrag (event){
+        var data =  sortable.data ;
+        if(data){
+            //当前元素移动了多少距离
+            data.deltaX = event.pageX - data.startX;
+            data.deltaY = event.pageY - data.startY;
+            //现在的坐标
+            data.offsetX = data.deltaX + data.originalX;
+            data.offsetY = data.deltaY + data.originalY;
+            console.log(data.dragger)
+        }
+    }
+    function handleSortEnd(){
+        delete sortable.data
+    }
+    draggable.dropscene.push(handleSortEnd)
     return $;
 })
 /*

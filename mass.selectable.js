@@ -1,4 +1,4 @@
-﻿define("selectable", ["mass.droppable"], function($) {
+define("selectable", ["mass.droppable"], function($) {
     var defaults = {
         appendTo: "body",
         filter: "*",

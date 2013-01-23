@@ -4,8 +4,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
     supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
     onstart = supportTouch ? "touchstart" : "mousedown",
     ondrag = supportTouch ? "touchmove" : "mousemove",
-    onend = supportTouch ? "touchend" : "mouseup",
-    rdrag = new RegExp("(^|\\.)draggable(\\.|$)");
+    onend = supportTouch ? "touchend" : "mouseup"
+   // rdrag = new RegExp("(^|\\.)draggable(\\.|$)");
     /**
      *
      *  containment：规定拖动块可活动的范围。有五种情况.
