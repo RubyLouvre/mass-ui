@@ -10,35 +10,48 @@ define("sortable",["mass.droppable"], function($){
         var data = $.mix({}, defaults, hash || {})
         //  data.helper = $("<div class='ui-selectable-helper'></div>");
         data["this"] = this;
+        //处理方向拖拽
+        if(data.axis !== "" && !/^(x|y|xy)$/.test(data.axis)) {
+            data.axis = "xy";
+        }
         this.data("sortable", data);
         this.on("mousedown.sortable", data.selector, data, handleSortStart);
-        this.on("mousemove.sortable", data.selector, data, handleSortDrag);
+        // this.on("mousemove.sortable", data.selector, data, handleSortDrag);
         return this;
     }
     var draggable = $.fn.draggable;
     function handleSortStart(event){
         var inner = event.handleObj;
-        var dragger = $(event.target)
-        var offset = dragger.offset();
+        var target = event.target
+        var offset = $(target).offset();
         var data = $.mix({ }, inner,
         {
             opos: [event.pageX, event.pageY],
-            dragger: dragger,//实际上被拖动的元素
+            dragger: $(target),//实际上被拖动的元素
             startX: event.pageX,
             startY: event.pageY,
             originalX: offset.left,
             originalY: offset.top
         });
+        //在鼠标按下时，立即确认现在页面的情况，包括动态插入的节点
         //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
+        var els = [];
+        var droppers = [];
+        data.realm = nodes.valueOf();//活动范围
         //再过滤那些不配被选中的子元素
         nodes = nodes.children(data.filter);
-        //批量生成放置元素的坐标对象
-        var els = []
-        data.candidates = $.map(nodes, function() {
-            els.push(this);
-            return draggable.locate($(this));
-        });
+        for(var i = 0, node; node = nodes[i++];){
+            if(node !== target && !$.contains(node, target)){
+                els.push(node);
+                droppers.push( draggable.locate(  $(node))  );    //批量生成放置元素的坐标对象
+            }
+        }
+        data.droppers = droppers;
+        //判定是上下重排还是左右重排
+        data.floating = data.droppers ? data.axis === "x" ||
+        (/left|right/).test( $(els).css("float")) || (/inline|table-cell/).test( $(els).css("display") ) : false;
+
         if($.isFunction(data.sortstart)) {
             event.type = "sortstart";
             data.sortstart.call(els, event, data)
@@ -48,18 +61,74 @@ define("sortable",["mass.droppable"], function($){
     function handleSortDrag (event){
         var data =  sortable.data ;
         if(data){
+            var target = event.target, ok = false
+            for(var i = 0, node ; node = data.realm[i++];){
+                if( $.contains(node, target, true)){
+                    ok = true;
+                    break
+                }
+            }
+            if(!ok){
+                return
+            }
+
+            node = data.dragger[0]
+            if(!data._placeholder){
+                var placeholder = node.cloneNode(false);
+                placeholder.style.visibility = "hidden";
+                placeholder.id ="placeholder"
+                data._placeholder = node.parentNode.insertBefore(placeholder, node)
+                node.style.position =  "absolute";
+            }
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
             data.deltaY = event.pageY - data.startY;
+            if(data.floating){
+                data.direction = data.deltaX > 0 ? "right" : "left";
+            }else{
+                data.direction = data.deltaY > 0 ? "down" : "up";
+            }
+         
+        
             //现在的坐标
             data.offsetX = data.deltaX + data.originalX;
             data.offsetY = data.deltaY + data.originalY;
-            console.log(data.dragger)
+            node.style.left = data.offsetX + "px";
+            node.style.top = data.offsetY + "px";
+            //开始判定有没有相交
+            var dragger = data.dragger
+            var drg = dragger.drg || (dragger.drg = {
+                element: dragger,
+                
+                width: dragger.outerWidth(),
+                height: dragger.outerHeight()
+            });
+            draggable.locate(dragger, null, dragger.drg); //生成拖拽元素的坐标对象
+            //console.log( data.droppers)
+            var fn = draggable.modes.middle;
+            if(!data.crossing){//如果还没有相交者
+                for(var i = 0, drp; drp = data.droppers[i++];) {
+          
+                    var isEnter = drp.node != drg.node && fn(event, drg, drp);
+                    if(isEnter) {
+                        data.crossing = drp;
+                        console.log("rrrrrrrrrrrrrrrrrr")
+                        console.log(drp.node)
+                        break;
+                    }
+                }
+            }else if( data.crossing && !fn(event, drg, data.crossing)){//判定拖动块已离开原
+                delete  data.crossing
+            }
+         
+         
         }
+
     }
     function handleSortEnd(){
         delete sortable.data
     }
+    draggable.underway.push(handleSortDrag)
     draggable.dropscene.push(handleSortEnd)
     return $;
 })

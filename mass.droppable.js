@@ -33,6 +33,7 @@ define("droppable", ["mass.draggable"], function($) {
             left: 0
         }
         drg = drg || {
+            node: el[0],
             element: el,
             config: config,
             width: el.outerWidth(),

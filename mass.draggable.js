@@ -87,8 +87,8 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
         this.on(onstart + ".draggable", internal.handle, dragstart); //绑定拖动事件
         return this;
     }
-    draggable.underway = [drag];
-    draggable.dropscene = [dragend];
+    draggable.underway = [drag];//拖拽时调用的回调
+    draggable.dropscene = [dragend];//鼠标弹起时调用的回调
     "dropinit dropstart drop dropend".replace($.rword, function(method) {
         draggable[method] = $.noop;
     });
