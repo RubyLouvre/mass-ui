@@ -36,8 +36,8 @@ define("droppable", ["mass.draggable"], function($) {
             node: el[0],
             element: el,
             config: config,
-            width: el.outerWidth(),
-            height: el.outerHeight()
+            width: el.innerWidth(),
+            height: el.innerHeight()
         }
         drg.top = posi.top;
         drg.left = posi.left;
@@ -97,8 +97,8 @@ define("droppable", ["mass.draggable"], function($) {
         var el = dd.dragger
         var drg = el.drg || (el.drg = {
             element: el,
-            width: el.outerWidth(),
-            height: el.outerHeight()
+            width: el.innerWidth(),
+            height: el.innerHeight()
         });
         draggable.locate(el, null, el.drg); //生成拖拽元素的坐标对象
         for(var i = 0, drp; drp = droppers[i++];) {

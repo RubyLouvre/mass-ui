@@ -6,6 +6,23 @@ define("sortable",["mass.droppable"], function($){
     var defaults = {
         filter: "*"
     }
+    /**
+     * 配置参数
+     * axis 轴拖拽 x 水平 y 垂直 xy 任意 "" 不能拖 非以上四者或没有预设默认xy
+     * sortstart 开始排序时调用的回调
+     * seletor 选择器，用于事件代理
+     * filter 原匹配元素的子元素的CSS表达式。比如$(ol).sortable({filter:".aaa"}),
+     *      那么它只会在LI元素中类名为aaa的孩子中选择，默认为*
+     * =============================
+     * 经过组件调整后生成的配置对象多出的属性
+     * this 原mass对象
+     * dragger 正在被拖动的元素的mass对象
+     * startX 鼠标按下时的它相对于页面的横坐标
+     * startY 鼠标按下时的它相对于页面的纵坐标
+     * droppers 能被放置的子元素（不包括拖拽元素）的坐标信息组成的数组
+     * realm 鼠标可活动的有效范围
+     * floating 判定是上下重排还是左右重排
+     */
     var sortable =  $.fn.sortable = function(hash) {
         var data = $.mix({}, defaults, hash || {})
         //  data.helper = $("<div class='ui-selectable-helper'></div>");
@@ -22,17 +39,21 @@ define("sortable",["mass.droppable"], function($){
     var draggable = $.fn.draggable;
     function handleSortStart(event){
         var inner = event.handleObj;
-        var target = event.target
-        var offset = $(target).offset();
+        var target = $(event.target)
+        var offset = target.offset();
         var data = $.mix({ }, inner,
         {
-            opos: [event.pageX, event.pageY],
-            dragger: $(target),//实际上被拖动的元素
+            dragger: target,//实际上被拖动的元素
             startX: event.pageX,
             startY: event.pageY,
+            prevX: event.pageX,
+            prevY: event.pageY,
             originalX: offset.left,
             originalY: offset.top
         });
+        //必须基于全局样式计算的样式变成内联样式,防止拖拽时走形
+        target.width(target.width())
+        target.height(target.height())
         //在鼠标按下时，立即确认现在页面的情况，包括动态插入的节点
         //如果使用了事件代理，则在原基础上找到那被代理的元素
         var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
@@ -41,12 +62,13 @@ define("sortable",["mass.droppable"], function($){
         data.realm = nodes.valueOf();//活动范围
         //再过滤那些不配被选中的子元素
         nodes = nodes.children(data.filter);
-        for(var i = 0, node; node = nodes[i++];){
-            if(node !== target && !$.contains(node, target)){
+        for(var i = 0, node; node = nodes[i];i++){
+            if(node !== target[0] && !$.contains(node, target[0])){
                 els.push(node);
                 droppers.push( draggable.locate(  $(node))  );    //批量生成放置元素的坐标对象
             }
         }
+
         data.droppers = droppers;
         //判定是上下重排还是左右重排
         data.floating = data.droppers ? data.axis === "x" ||
@@ -58,6 +80,57 @@ define("sortable",["mass.droppable"], function($){
         }
         sortable.data = data;
     }
+    function implant(drg, drp, direction){
+        var bool = false;
+        switch(direction ){
+            case "down":
+                bool = drg.bottom - drp.top > drp.height * .5;
+                break;
+            case "up":
+                bool = drp.bottom -  drg.top > drp.height * .5;
+                break;
+            case "right":
+                bool = drg.right - drp.left > drp.width * .5;
+            case "left":
+                bool = drp.right - drg.left > drp.width * .5;
+        }
+        return bool;
+    }
+    function isolate(drg, drp, direction){
+        var bool = false
+        switch(direction ){
+            case "down":
+                bool = drg.top > drp.bottom ;
+                break;
+            case "up":
+                bool = drg.bottom < drp.top;
+                break;
+            case "right":
+                bool = drg.left > drp.right ;
+            case "left":
+                bool =  drg.right < drp.left ;
+        }
+        return bool;
+    }
+    function getSwapObject( node , drag,  dir, droppers){
+        var prop = "previousSibling" , self = node;
+        if(dir == "down" || dir == "right"){
+            prop = "nextSibling"
+        }
+        while(node = node[prop]){
+            if(node.nodeType == 1 && node != drag){
+                break;
+            }
+        }
+        if(node != self){
+            for(var i = 0, obj; obj = droppers[i++];){
+                if(obj.node == node){
+                    return obj;
+                }
+            }
+        }
+        return null;
+    }
     function handleSortDrag (event){
         var data =  sortable.data ;
         if(data){
@@ -65,168 +138,91 @@ define("sortable",["mass.droppable"], function($){
             for(var i = 0, node ; node = data.realm[i++];){
                 if( $.contains(node, target, true)){
                     ok = true;
-                    break
+                    break;
                 }
             }
             if(!ok){
-                return
+                return;
             }
-
-            node = data.dragger[0]
+            var dragger = data.dragger;
+            node = dragger[0];
             if(!data._placeholder){
-                var placeholder = node.cloneNode(false);
-                placeholder.style.visibility = "hidden";
-                placeholder.id ="placeholder"
-                data._placeholder = node.parentNode.insertBefore(placeholder, node)
+                var perch = node.cloneNode(false);
+                perch.style.visibility = "hidden";
+                perch.id ="placeholder";
+                data._placeholder = node.parentNode.insertBefore(perch, node);
                 node.style.position =  "absolute";
+            }
+            //判定移动方向
+            if(data.floating){
+                data.direction = event.pageX - data.prevX > 0 ? "right" : "left";
+            }else{
+                data.direction = event.pageY - data.prevY > 0 ? "down" : "up";
             }
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
             data.deltaY = event.pageY - data.startY;
-            if(data.floating){
-                data.direction = data.deltaX > 0 ? "right" : "left";
-            }else{
-                data.direction = data.deltaY > 0 ? "down" : "up";
-            }
-         
-        
+            data.prevX = event.pageX;
+            data.prevY = event.pageY;    
             //现在的坐标
             data.offsetX = data.deltaX + data.originalX;
             data.offsetY = data.deltaY + data.originalY;
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
             //开始判定有没有相交
-            var dragger = data.dragger
-            var drg = dragger.drg || (dragger.drg = {
-                element: dragger,
-                
-                width: dragger.outerWidth(),
-                height: dragger.outerHeight()
-            });
-            draggable.locate(dragger, null, dragger.drg); //生成拖拽元素的坐标对象
-            //console.log( data.droppers)
-            var fn = draggable.modes.middle;
-            if(!data.crossing){//如果还没有相交者
-                for(var i = 0, drp; drp = data.droppers[i++];) {
-          
-                    var isEnter = drp.node != drg.node && fn(event, drg, drp);
-                    if(isEnter) {
-                        data.crossing = drp;
-                        console.log("rrrrrrrrrrrrrrrrrr")
-                        console.log(drp.node)
-                        break;
+            var drp = getSwapObject(data._placeholder, node, data.direction, data.droppers )
+            if(drp){//如果存在交换元素
+                var drg = dragger.drg || (dragger.drg = {
+                    element: dragger,
+                    width: dragger.innerWidth(),
+                    height: dragger.innerHeight()
+                });
+
+                draggable.locate(dragger, null, dragger.drg); //生成拖拽元素的坐标对象
+                if(! data.swap){
+                    var implanted =  implant( drg, drp , data.direction);
+                    if(implanted) {
+                        data.swap = drp;
+                    }
+                }else{
+                    if(  isolate(drg, data.swap, data.direction) ){//判定拖动块已离开原
+                        drp = data.swap;
+                        var a = drp.node, b = data._placeholder
+                        switch(data.direction){//移动占位符与用于交换的放置元素
+                            case "down":
+                                b.parentNode.insertBefore(a,b);
+                                break
+                            case "up":
+                                b.parentNode.insertBefore(b,a);
+                                break;
+                        }
+                        var el =  drp.element;
+                        var offset = el.offset();
+                        drp.top = offset.top;
+                        drp.left = offset.left;
+                        draggable.locate(el, null, drp);
+                        delete  data.swap;
                     }
                 }
-            }else if( data.crossing && !fn(event, drg, data.crossing)){//判定拖动块已离开原
-                delete  data.crossing
             }
-         
-         
         }
 
     }
     function handleSortEnd(){
-        delete sortable.data
+        var data = sortable.data;
+        if(data){
+            var perch = data._placeholder
+            var parent = perch.parentNode;
+            var node = data.dragger[0]
+            parent.insertBefore(node,perch)
+            node.style.position = "static";
+            parent.removeChild(perch);
+            parent.style.visibility = "inherit";
+            parent.style.visibility = "visible";
+            delete sortable.data
+        }
     }
-    draggable.underway.push(handleSortDrag)
-    draggable.dropscene.push(handleSortEnd)
+    draggable.underway.push(handleSortDrag);
+    draggable.dropscene.push(handleSortEnd);
     return $;
 })
-/*
-var a = {
-    _convertPositionTo: function(d, pos) {
-
-        if(!pos) {
-            pos = this.position;
-        }
-
-        var mod = d === "absolute" ? 1 : -1,
-        scroll = this.cssPosition === "absolute" && !(this.scrollParent[0] !== document &&
-            $.contains(this.scrollParent[0], this.offsetParent[0])) ? this.offsetParent :
-            this.scrollParent, scrollIsRootNode = (/(html|body)/i).test(scroll[0].tagName);
-
-        return {
-            top: (
-                pos.top	+																// The absolute mouse position
-                this.offset.relative.top * mod +										// Only for relative positioned nodes: Relative offset from element to offset parent
-                this.offset.parent.top * mod -										// The offsetParent's offset without borders (offset + border)
-                ( ( this.cssPosition === "fixed" ? -this.scrollParent.scrollTop() : ( scrollIsRootNode ? 0 : scroll.scrollTop() ) ) * mod)
-                ),
-            left: (
-                pos.left +																// The absolute mouse position
-                this.offset.relative.left * mod +										// Only for relative positioned nodes: Relative offset from element to offset parent
-                this.offset.parent.left * mod	-										// The offsetParent's offset without borders (offset + border)
-                ( ( this.cssPosition === "fixed" ? -this.scrollParent.scrollLeft() : scrollIsRootNode ? 0 : scroll.scrollLeft() ) * mod)
-                )
-        };
-
-    },
-
-    _generatePosition: function(event) {
-
-        var containment, co, top, left,
-        o = this.options,
-        scroll = this.cssPosition === "absolute" && !(this.scrollParent[0] !== document && $.contains(this.scrollParent[0], this.offsetParent[0])) ? this.offsetParent : this.scrollParent,
-        scrollIsRootNode = (/(html|body)/i).test(scroll[0].tagName),
-        pageX = event.pageX,
-        pageY = event.pageY;
-
-
-
-        if(this.originalPosition) { //If we are not dragging yet, we won't check for options
-            if(this.containment) {
-                if (this.relative_container){
-                    co = this.relative_container.offset();
-                    containment = [ this.containment[0] + co.left,
-                    this.containment[1] + co.top,
-                    this.containment[2] + co.left,
-                    this.containment[3] + co.top ];
-                }
-                else {
-                    containment = this.containment;
-                }
-
-                if(event.pageX - this.offset.click.left < containment[0]) {
-                    pageX = containment[0] + this.offset.click.left;
-                }
-                if(event.pageY - this.offset.click.top < containment[1]) {
-                    pageY = containment[1] + this.offset.click.top;
-                }
-                if(event.pageX - this.offset.click.left > containment[2]) {
-                    pageX = containment[2] + this.offset.click.left;
-                }
-                if(event.pageY - this.offset.click.top > containment[3]) {
-                    pageY = containment[3] + this.offset.click.top;
-                }
-            }
-
-            if(o.grid) {
-                //Check for grid elements set to 0 to prevent divide by 0 error causing invalid argument errors in IE (see ticket #6950)
-                top = o.grid[1] ? this.originalPageY + Math.round((pageY - this.originalPageY) / o.grid[1]) * o.grid[1] : this.originalPageY;
-                pageY = containment ? ((top - this.offset.click.top >= containment[1] || top - this.offset.click.top > containment[3]) ? top : ((top - this.offset.click.top >= containment[1]) ? top - o.grid[1] : top + o.grid[1])) : top;
-
-                left = o.grid[0] ? this.originalPageX + Math.round((pageX - this.originalPageX) / o.grid[0]) * o.grid[0] : this.originalPageX;
-                pageX = containment ? ((left - this.offset.click.left >= containment[0] || left - this.offset.click.left > containment[2]) ? left : ((left - this.offset.click.left >= containment[0]) ? left - o.grid[0] : left + o.grid[0])) : left;
-            }
-
-        }
-
-        return {
-            top: (
-                pageY -																	// The absolute mouse position
-                this.offset.click.top	-												// Click offset (relative to the element)
-                this.offset.relative.top -												// Only for relative positioned nodes: Relative offset from element to offset parent
-                this.offset.parent.top +												// The offsetParent's offset without borders (offset + border)
-                ( ( this.cssPosition === "fixed" ? -this.scrollParent.scrollTop() : ( scrollIsRootNode ? 0 : scroll.scrollTop() ) ))
-                ),
-            left: (
-                pageX -																	// The absolute mouse position
-                this.offset.click.left -												// Click offset (relative to the element)
-                this.offset.relative.left -												// Only for relative positioned nodes: Relative offset from element to offset parent
-                this.offset.parent.left +												// The offsetParent's offset without borders (offset + border)
-                ( ( this.cssPosition === "fixed" ? -this.scrollParent.scrollLeft() : scrollIsRootNode ? 0 : scroll.scrollLeft() ))
-                )
-        };
-
-    },
-}*/
