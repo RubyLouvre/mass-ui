@@ -110,7 +110,7 @@ define("sortable",["mass.droppable"], function($){
             case "right":
             
                 bool = drg.left > drp.right ;
-                console.log(drg.left +" > "+drp.right+" - "+bool)
+                //  console.log(drg.left +" > "+drp.right+" - "+bool)
                 break;
             case "left":
                 bool =  drg.right < drp.left ;
@@ -150,13 +150,13 @@ define("sortable",["mass.droppable"], function($){
             if(!ok){
                 return;
             }
-            var dragger = data.dragger;
+            var dragger = data.dragger, other, drp;
             node = dragger[0];
             if(!data._placeholder){
-                var perch = node.cloneNode(false);
-                perch.style.visibility = "hidden";
-                perch.id ="placeholder";
-                data._placeholder = node.parentNode.insertBefore(perch, node);
+                other = node.cloneNode(false);
+                other.style.visibility = "hidden";
+                other.id ="placeholder";
+                data._placeholder = node.parentNode.insertBefore(other, node);
                 node.style.position =  "absolute";
             }
             //判定移动方向
@@ -165,19 +165,39 @@ define("sortable",["mass.droppable"], function($){
             }else{
                 data.direction = event.pageY - data.prevY > 0 ? "down" : "up";
             }
-            console.log( data.direction)
+            // console.log( data.direction)
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
             data.deltaY = event.pageY - data.startY;
             data.prevX = event.pageX;
-            data.prevY = event.pageY;    
+            data.prevY = event.pageY;
             //现在的坐标
             data.offsetX = data.deltaX + data.originalX;
             data.offsetY = data.deltaY + data.originalY;
+            //移开底下的拖动块,取得下面的元素,然后把拖动块移回来,判定这两者的关系
+            if(data.floating){
+                node.style.visibility = "hidden"
+                node.style.top = "-1000px";
+                node.style.left = "-1000px";
+                other = document.elementFromPoint( event.pageX, event.pageY)
+            }
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
-            //开始判定有没有相交
-            var drp = getSwapObject(data._placeholder, node, data.direction, data.droppers )
+            if(data.floating){
+                node.style.visibility = "visible"
+                if(other.tagName == "HTML" ){
+                    return
+                }
+                for( i = 0; node = data.droppers[i++];){
+                    if($.contans(node.node, other, true)){
+                        drp = node
+                        break
+                    }
+                }
+            }else{
+                //开始判定有没有相交
+                drp = getSwapObject(data._placeholder, node, data.direction, data.droppers )
+            }
             if(drp){//如果存在交换元素
                 var drg = dragger.drg || (dragger.drg = {
                     element: dragger,
