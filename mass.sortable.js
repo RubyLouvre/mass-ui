@@ -91,8 +91,10 @@ define("sortable",["mass.droppable"], function($){
                 break;
             case "right":
                 bool = drg.right - drp.left > drp.width * .5;
+                break;
             case "left":
                 bool = drp.right - drg.left > drp.width * .5;
+                break;
         }
         return bool;
     }
@@ -106,9 +108,13 @@ define("sortable",["mass.droppable"], function($){
                 bool = drg.bottom < drp.top;
                 break;
             case "right":
+            
                 bool = drg.left > drp.right ;
+                console.log(drg.left +" > "+drp.right+" - "+bool)
+                break;
             case "left":
                 bool =  drg.right < drp.left ;
+                break;
         }
         return bool;
     }
@@ -159,6 +165,7 @@ define("sortable",["mass.droppable"], function($){
             }else{
                 data.direction = event.pageY - data.prevY > 0 ? "down" : "up";
             }
+            console.log( data.direction)
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
             data.deltaY = event.pageY - data.startY;
@@ -190,9 +197,11 @@ define("sortable",["mass.droppable"], function($){
                         var a = drp.node, b = data._placeholder
                         switch(data.direction){//移动占位符与用于交换的放置元素
                             case "down":
+                            case "right":
                                 b.parentNode.insertBefore(a,b);
                                 break
                             case "up":
+                            case "left":
                                 b.parentNode.insertBefore(b,a);
                                 break;
                         }
@@ -219,6 +228,7 @@ define("sortable",["mass.droppable"], function($){
             parent.removeChild(perch);
             parent.style.visibility = "inherit";
             parent.style.visibility = "visible";
+            delete  data._placeholder
             delete sortable.data
         }
     }
