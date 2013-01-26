@@ -152,23 +152,27 @@ define("sortable", ["mass.droppable"], function($) {
                 $.log("向下移动",8)
                 return  drg.top > drp.bottom;
             case "up":
-                 $.log("向上移动",8)
+                $.log("向上移动",8)
                 return drg.bottom < drp.top;
             default:
                 var horizontal = Math.abs(petch.top -drp.top) < 1;
                 //      console.log("horizontal  "+horizontal)
                 if(horizontal){
                     console.log("petch  "+petch.right +" drp.left "+ drp.left)
-                    if(petch.right < drp.left){//如果占位符在左边
+                    if(petch.right < drp.left){//向右移动
                         console.log(drg.left > drp.right)
                         return drg.left > drp.right;
-                    }else{
+                    }else{//向左移动
                         return drg.right < drp.left;
                     }
                 }else{
-                    if(petch.bottom < drp.top){//如果占位符在左边
+                    $.log("垂直移动",7)
+                    // console.log(petch.bottom +" "+drp.top)
+                    if(petch.bottom < drp.top){//向下移动
+                        //   $.log("向下移动",7)
+                        $.log(drg.top +">"+ drp.bottom)
                         return drg.top > drp.bottom;
-                    }else{
+                    }else{//向上移动
                         return drg.bottom < drp.top;
                     }
                 }
@@ -219,15 +223,15 @@ define("sortable", ["mass.droppable"], function($) {
                 node.style.top = "-1000px";
                 node.style.left = "-1000px";
                 other = document.elementFromPoint(event.pageX, event.pageY);
-                
+                console.log(other)
             }
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
             if(data.floating) {//data.floating
                 //然后遍历所有候选项,如果某某与other相包含即为目标
                 node.style.visibility = "visible"
-                if(other.tagName == "HTML") {
-                    if( ! data._dropper){
+                if(!other || other.tagName == "HTML") {
+                    if( !data._dropper){
                         // console.log("other")
                         return
                     }
@@ -254,7 +258,7 @@ define("sortable", ["mass.droppable"], function($) {
                     }
                 } else {
                     if(isIsolate(dragger, data._dropper, data.direction, data.petch)) { //判定拖动块已离开原
-                        var a = data._dropper.node,  b = data.placeholder, c = b;
+                        var a = data._dropper.node, p = a.parentNode, b = data.placeholder, c = b;
                         node = b;
                         if(!dir){
                             dir =  "up";
@@ -267,10 +271,15 @@ define("sortable", ["mass.droppable"], function($) {
                         }
                         switch(dir) { //移动占位符与用于交换的放置元素
                             case "down":
-                                b.parentNode.insertBefore(a, b);
+                                var next = $(a).next()[0];
+                                if(next){
+                                    p.insertBefore(b, next)
+                                }else{
+                                    p.appendChild(b)
+                                }
                                 break
                             case "up":
-                                b.parentNode.insertBefore(b, a);
+                                p.insertBefore(b, a);
                                 break;
                         }
                         data.petch.refresh();
