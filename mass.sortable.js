@@ -24,18 +24,18 @@ define("sortable", ["mass.droppable"], function($) {
      * floating 判定是上下重排还是左右重排
      */
     var sortable = $.fn.sortable = function(hash) {
-            var data = $.mix({}, defaults, hash || {})
-            //  data.helper = $("<div class='ui-selectable-helper'></div>");
-            data["this"] = this;
-            //处理方向拖拽
-            if(data.axis !== "" && !/^(x|y|xy)$/.test(data.axis)) {
-                data.axis = "xy";
-            }
-            this.data("sortable", data);
-            this.on("mousedown.sortable", data.selector, data, handleSortStart);
-            // this.on("mousemove.sortable", data.selector, data, handleSortDrag);
-            return this;
+        var data = $.mix({}, defaults, hash || {})
+        //  data.helper = $("<div class='ui-selectable-helper'></div>");
+        data["this"] = this;
+        //处理方向拖拽
+        if(data.axis !== "" && !/^(x|y|xy)$/.test(data.axis)) {
+            data.axis = "xy";
         }
+        this.data("sortable", data);
+        this.on("mousedown.sortable", data.selector, data, handleSortStart);
+        // this.on("mousemove.sortable", data.selector, data, handleSortDrag);
+        return this;
+    }
     var draggable = $.fn.draggable;
 
     function getDragger(target, nodes) {
@@ -47,6 +47,7 @@ define("sortable", ["mass.droppable"], function($) {
     }
 
     function handleSortStart(event) {
+        draggable.textselect(false);
         var handleObj = event.handleObj;
         //在鼠标按下时，立即确认现在页面的情况，包括动态插入的节点
         //如果使用了事件代理，则在原基础上找到那被代理的元素
@@ -55,14 +56,13 @@ define("sortable", ["mass.droppable"], function($) {
         var sorters = nodes.concat(); //可以重新排序的元素
         var node = getDragger(event.target, sorters); //正在被拖拽的目标元素
         var dragger = $(node)
-        //  console.log(node)
         var offset = dragger.offset();
-        $.Array.remove(sorters, dragger)
+        $.Array.remove(sorters, node);
         //必须基于全局样式计算的样式变成内联样式,防止拖拽时走形
-        dragger.width(dragger.width())
-        dragger.height(dragger.height())
+        dragger.width(dragger.width());
+        dragger.height(dragger.height());
         var data = $.mix({}, handleObj, {
-            dragger: dragger,
+            node: node,
             //实际上被拖动的元素
             startX: event.pageX,
             startY: event.pageY,
@@ -77,8 +77,9 @@ define("sortable", ["mass.droppable"], function($) {
             originalY: offset.top //拖动块的纵坐标
         });
         data.droppers = sorters.map(function(node) {
-            return draggable.locate($(node))
-        })
+            return new Locate(node)
+        });
+        data.dragger =  new Locate(node)
         //判定是上下重排还是左右重排
         data.floating = data.droppers ? data.axis === "x" || (/left|right/).test($(sorters).css("float")) || (/inline|table-cell/).test($(sorters).css("display")) : false;
 
@@ -92,18 +93,18 @@ define("sortable", ["mass.droppable"], function($) {
     function implant(drg, drp, direction) {
         var bool = false;
         switch(direction) {
-        case "down":
-            bool = drg.bottom - drp.top > drp.height * .5;
-            break;
-        case "up":
-            bool = drp.bottom - drg.top > drp.height * .5;
-            break;
-        case "right":
-            bool = drg.right - drp.left > drp.width * .5;
-            break;
-        case "left":
-            bool = drp.right - drg.left > drp.width * .5;
-            break;
+            case "down":
+                bool = drg.bottom - drp.top > drp.height * .5;
+                break;
+            case "up":
+                bool = drp.bottom - drg.top > drp.height * .5;
+                break;
+            case "right":
+                bool = drg.right - drp.left > drp.width * .5;
+                break;
+            case "left":
+                bool = drp.right - drg.left > drp.width * .5;
+                break;
         }
         return bool;
     }
@@ -125,37 +126,38 @@ define("sortable", ["mass.droppable"], function($) {
     function isolate(drg, drp, direction) {
         var bool = false
         switch(direction) {
-        case "down":
-            bool = drg.top > drp.bottom;
-            break;
-        case "up":
-            bool = drg.bottom < drp.top;
-            break;
-        case "right":
+            case "down":
+                bool = drg.top > drp.bottom;
+                break;
+            case "up":
+                bool = drg.bottom < drp.top;
+                break;
+            case "right":
 
-            bool = drg.left > drp.right;
-            //  console.log(drg.left +" > "+drp.right+" - "+bool)
-            break;
-        case "left":
-            bool = drg.right < drp.left;
-            break;
+                bool = drg.left > drp.right;
+                //  console.log(drg.left +" > "+drp.right+" - "+bool)
+                break;
+            case "left":
+                bool = drg.right < drp.left;
+                break;
         }
         return bool;
     }
 
     function simpleIntersect(node, drag, dir, droppers) {
         var prop = "previousSibling",
-            self = node;
+        self = node;
         if(dir == "down" || dir == "right") {
             prop = "nextSibling"
         }
         while(node = node[prop]) {
-            if(node.nodeType == 1 && node != drag) {
+            if(node.nodeType == 1 && node != drag ) {
                 break;
             }
         }
         if(node != self) {
             for(var i = 0, obj; obj = droppers[i++];) {
+                // console.log(obj)
                 if(obj.node == node) {
                     return obj;
                 }
@@ -163,14 +165,33 @@ define("sortable", ["mass.droppable"], function($) {
         }
         return null;
     }
-
+    function Locate(node){
+        this.node = node;
+        var wrapper = $(node);
+        var offset = wrapper.offset();
+        this.wrapper = wrapper
+        this.top = offset.top;
+        this.left = offset.left;
+        this.width = wrapper.innerWidth();
+        this.height = wrapper.innerHeight();
+        this.bottom = this.height + this.top;
+        this.right = this.width + this.left;
+    }
+    Locate.prototype.refresh = function(){
+        var offset =  this.wrapper.offset();
+        this.top = offset.top;
+        this.left = offset.left;
+        this.bottom = this.height + this.top;
+        this.right = this.width + this.left;
+        return this;
+    }
     function handleSortDrag(event) {
         var data = sortable.data;
         if(data) {
             var target = event.target,
-                ok = false
-            for(var i = 0, node; node = data.realm[i++];) {
-                if($.contains(node, target, true)) {
+            ok = false
+            for(var i = 0, el; el = data.realm[i++];) {
+                if($.contains(el, target, true)) {
                     ok = true;
                     break;
                 }
@@ -178,14 +199,13 @@ define("sortable", ["mass.droppable"], function($) {
             if(!ok) {
                 return;
             }
-            var dragger = data.dragger,
-                other, drp;
-            node = dragger[0];
-            if(!data._placeholder) {
+         
+            var dragger = data.dragger, node = data.node, dropper, other;
+            if(!data.placeholder) {//我们需要插入一个空白区域到原位撑着
                 other = node.cloneNode(false);
                 other.style.visibility = "hidden";
                 other.id = "placeholder";
-                data._placeholder = node.parentNode.insertBefore(other, node);
+                data.placeholder = node.parentNode.insertBefore(other, node);
                 node.style.position = "absolute";
             }
             //判定移动方向
@@ -203,8 +223,9 @@ define("sortable", ["mass.droppable"], function($) {
             //现在的坐标
             data.offsetX = data.deltaX + data.originalX;
             data.offsetY = data.deltaY + data.originalY;
-            //移开底下的拖动块,取得下面的元素,然后把拖动块移回来,判定这两者的关系
             if(data.floating) {
+                //通过document.elementFromPoint求得要交换的元素
+                //这里是第一步,先设法移走遮在它上方的拖动块
                 node.style.visibility = "hidden"
                 node.style.top = "-1000px";
                 node.style.left = "-1000px";
@@ -213,54 +234,44 @@ define("sortable", ["mass.droppable"], function($) {
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
             if(data.floating) {
+                //然后遍历所有候选项,如果某某与other相包含即为目标
                 node.style.visibility = "visible"
                 if(other.tagName == "HTML") {
                     return
                 }
-                for(i = 0; node = data.droppers[i++];) {
-                    if($.contans(node.node, other, true)) {
-                        drp = node;
+                for(i = 0; el = data.droppers[i++];) {
+                    if($.contans(el.node, other, true)) {
+                        dropper = el;
                         break;
                     }
                 }
             } else {
-                //开始判定有没有相交
-                drp = simpleIntersect(data._placeholder, node, data.direction, data.droppers)
+                //以最简单的方式求出要交换位置的元素
+                dropper = simpleIntersect(data.placeholder, node, data.direction, data.droppers);
             }
-            if(drp) { //如果存在交换元素
-                var drg = dragger.drg || (dragger.drg = {
-                    element: dragger,
-                    width: dragger.innerWidth(),
-                    height: dragger.innerHeight()
-                });
-
-                draggable.locate(dragger, null, dragger.drg); //生成拖拽元素的坐标对象
-                if(!data.swap) {
-
-                    if(intersect(drg, drp, data.direction)) {
-                        data.swap = drp;
+            if(dropper) { //如果存在交换元素
+                dragger.refresh()
+                if(!data._dropper) {
+                    if(intersect(dragger, dropper)) {
+                        data._dropper = dropper;
                     }
                 } else {
-                    if(isolate(drg, data.swap, data.direction)) { //判定拖动块已离开原
-                        drp = data.swap;
-                        var a = drp.node,
-                            b = data._placeholder
+                    //console.log("yyyyyyyyyyyyyyy")
+                    if(isolate(dragger, data._dropper, data.direction)) { //判定拖动块已离开原
+                        //console.log("xxxxxxxxxxxxx")
+                        var a = data._dropper.node,  b = data.placeholder;
                         switch(data.direction) { //移动占位符与用于交换的放置元素
-                        case "down":
-                        case "right":
-                            b.parentNode.insertBefore(a, b);
-                            break
-                        case "up":
-                        case "left":
-                            b.parentNode.insertBefore(b, a);
-                            break;
+                            case "down":
+                            case "right":
+                                b.parentNode.insertBefore(a, b);
+                                break
+                            case "up":
+                            case "left":
+                                b.parentNode.insertBefore(b, a);
+                                break;
                         }
-                        var el = drp.element;
-                        var offset = el.offset();
-                        drp.top = offset.top;
-                        drp.left = offset.left;
-                        draggable.locate(el, null, drp);
-                        delete data.swap;
+                        data._dropper.refresh();
+                        delete data._dropper;
                     }
                 }
             }
@@ -269,17 +280,18 @@ define("sortable", ["mass.droppable"], function($) {
     }
 
     function handleSortEnd() {
+        draggable.textselect(true);
         var data = sortable.data;
-        if(data && data._placeholder) {
-            var perch = data._placeholder
+        if(data && data.placeholder) {
+            var perch = data.placeholder
             var parent = perch.parentNode;
-            var node = data.dragger[0]
+            var node = data.node;
             parent.insertBefore(node, perch)
             node.style.position = "static";
             parent.removeChild(perch);
             parent.style.visibility = "inherit";
             parent.style.visibility = "visible";
-            delete data._placeholder
+            delete data.placeholder
             delete sortable.data
         }
     }
