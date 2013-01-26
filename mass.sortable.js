@@ -109,7 +109,7 @@ define("sortable", ["mass.droppable"], function($) {
         return bool;
     }
 
-    function intersect(A, B) { //如果A，B相交面积大于A的51%以上，则返回true
+    function isIntersect(A, B) { //如果A，B相交面积大于A的51%以上，则返回true
         var l = A.left >= B.left ? A.left : B.left;
         var r = A.right <= B.right ? A.right : B.right
         var t = A.top >= B.top ? B.top : A.top;
@@ -122,29 +122,18 @@ define("sortable", ["mass.droppable"], function($) {
         }
         return w * h > A.width * A.height * .51
     }
-
-    function isolate(drg, drp, direction) {
-        var bool = false
-        switch(direction) {
-            case "down":
-                bool = drg.top > drp.bottom;
-                break;
-            case "up":
-                bool = drg.bottom < drp.top;
-                break;
-            case "right":
-
-                bool = drg.left > drp.right;
-                //  console.log(drg.left +" > "+drp.right+" - "+bool)
-                break;
-            case "left":
-                bool = drg.right < drp.left;
-                break;
+    //不相交
+    function isIsolate(A, B) {
+        if(A.top > B.bottom){
+            return true
+        }else{
+            return A.bottom < B.top
         }
-        return bool;
+      
+    //  return B.top > A.bottom || B.bottom > A.top || B.left > A.right || B.right < A.left || false;
     }
 
-    function simpleIntersect(node, drag, dir, droppers) {
+    function isSimpleIntersect(node, drag, dir, droppers) {
         var prop = "previousSibling",
         self = node;
         if(dir == "down" || dir == "right") {
@@ -185,6 +174,24 @@ define("sortable", ["mass.droppable"], function($) {
         this.right = this.width + this.left;
         return this;
     }
+    function isolate(drg, drp, direction) {
+        var bool = false
+        switch(direction) {
+            case "down":
+                bool = drg.top > drp.bottom;
+                break;
+            case "up":
+                bool = drg.bottom < drp.top;
+                break;
+            case "right":
+                bool = drg.left > drp.right;
+                break;
+            case "left":
+                bool = drg.right < drp.left;
+                break;
+        }
+        return bool;
+    }
     function handleSortDrag(event) {
         var data = sortable.data;
         if(data) {
@@ -214,7 +221,6 @@ define("sortable", ["mass.droppable"], function($) {
             } else {
                 data.direction = event.pageY - data.prevY > 0 ? "down" : "up";
             }
-            // console.log( data.direction)
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
             data.deltaY = event.pageY - data.startY;
@@ -233,32 +239,35 @@ define("sortable", ["mass.droppable"], function($) {
             }
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
-            if(data.floating) {
+            if(data.floating) {//data.floating
                 //然后遍历所有候选项,如果某某与other相包含即为目标
                 node.style.visibility = "visible"
                 if(other.tagName == "HTML") {
                     return
                 }
+
                 for(i = 0; el = data.droppers[i++];) {
-                    if($.contans(el.node, other, true)) {
+                    if($.contains(el.node, other, true)) {
                         dropper = el;
                         break;
                     }
                 }
+
+               
             } else {
                 //以最简单的方式求出要交换位置的元素
-                dropper = simpleIntersect(data.placeholder, node, data.direction, data.droppers);
+           
+                dropper = isSimpleIntersect(data.placeholder, node, data.direction, data.droppers);
             }
-            if(dropper) { //如果存在交换元素
+            if(dropper ) { //如果存在交换元素
                 dragger.refresh()
+                //判定相覆盖的面积是否达拖动块的51%以上
                 if(!data._dropper) {
-                    if(intersect(dragger, dropper)) {
+                    if(isIntersect(dragger, dropper)) {
                         data._dropper = dropper;
                     }
                 } else {
-                    //console.log("yyyyyyyyyyyyyyy")
                     if(isolate(dragger, data._dropper, data.direction)) { //判定拖动块已离开原
-                        //console.log("xxxxxxxxxxxxx")
                         var a = data._dropper.node,  b = data.placeholder;
                         switch(data.direction) { //移动占位符与用于交换的放置元素
                             case "down":
@@ -274,6 +283,7 @@ define("sortable", ["mass.droppable"], function($) {
                         delete data._dropper;
                     }
                 }
+
             }
         }
 
