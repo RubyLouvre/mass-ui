@@ -1,7 +1,4 @@
-/* 
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
+
 define("sortable", ["mass.droppable"], function($) {
     var defaults = {
         filter: "*"
@@ -90,24 +87,6 @@ define("sortable", ["mass.droppable"], function($) {
         sortable.data = data;
     }
 
-    function implant(drg, drp, direction) {
-        var bool = false;
-        switch(direction) {
-            case "down":
-                bool = drg.bottom - drp.top > drp.height * .5;
-                break;
-            case "up":
-                bool = drp.bottom - drg.top > drp.height * .5;
-                break;
-            case "right":
-                bool = drg.right - drp.left > drp.width * .5;
-                break;
-            case "left":
-                bool = drp.right - drg.left > drp.width * .5;
-                break;
-        }
-        return bool;
-    }
 
     function isIntersect(A, B) { //如果A，B相交面积大于A的51%以上，则返回true
         var l = A.left >= B.left ? A.left : B.left;
@@ -116,22 +95,15 @@ define("sortable", ["mass.droppable"], function($) {
         var b = A.bottom <= B.bottom ? A.bottom : B.bottom;
         var w = r - l;
         var h = b - t;
-        $.log(w * h + " " + A.width * A.height + " " + A.node, 7)
         if(w <= 0 || h <= 0) {
+            console.log("isIntersect false")
             return false;
         }
-        return w * h > A.width * A.height * .51
+        var bool = w * h > A.width * A.height * .51
+        console.log("isIntersect "+bool)
+        return bool
     }
     //不相交
-    function isIsolate(A, B) {
-        if(A.top > B.bottom){
-            return true
-        }else{
-            return A.bottom < B.top
-        }
-      
-    //  return B.top > A.bottom || B.bottom > A.top || B.left > A.right || B.right < A.left || false;
-    }
 
     function isSimpleIntersect(node, drag, dir, droppers) {
         var prop = "previousSibling",
@@ -174,23 +146,34 @@ define("sortable", ["mass.droppable"], function($) {
         this.right = this.width + this.left;
         return this;
     }
-    function isolate(drg, drp, direction) {
-        var bool = false
-        switch(direction) {
+    function isIsolate(drg, drp, dir, petch) {
+        switch(dir) {
             case "down":
-                bool = drg.top > drp.bottom;
-                break;
+                $.log("向下移动",8)
+                return  drg.top > drp.bottom;
             case "up":
-                bool = drg.bottom < drp.top;
-                break;
-            case "right":
-                bool = drg.left > drp.right;
-                break;
-            case "left":
-                bool = drg.right < drp.left;
-                break;
+                 $.log("向上移动",8)
+                return drg.bottom < drp.top;
+            default:
+                var horizontal = Math.abs(petch.top -drp.top) < 1;
+                //      console.log("horizontal  "+horizontal)
+                if(horizontal){
+                    console.log("petch  "+petch.right +" drp.left "+ drp.left)
+                    if(petch.right < drp.left){//如果占位符在左边
+                        console.log(drg.left > drp.right)
+                        return drg.left > drp.right;
+                    }else{
+                        return drg.right < drp.left;
+                    }
+                }else{
+                    if(petch.bottom < drp.top){//如果占位符在左边
+                        return drg.top > drp.bottom;
+                    }else{
+                        return drg.bottom < drp.top;
+                    }
+                }
         }
-        return bool;
+        return false;
     }
     function handleSortDrag(event) {
         var data = sortable.data;
@@ -213,13 +196,13 @@ define("sortable", ["mass.droppable"], function($) {
                 other.style.visibility = "hidden";
                 other.id = "placeholder";
                 data.placeholder = node.parentNode.insertBefore(other, node);
+                data.petch = new Locate(data.placeholder)
                 node.style.position = "absolute";
             }
             //判定移动方向
-            if(data.floating) {
-                data.direction = event.pageX - data.prevX > 0 ? "right" : "left";
-            } else {
-                data.direction = event.pageY - data.prevY > 0 ? "down" : "up";
+            var dir
+            if(!data.floating) {
+                dir = event.pageY - data.prevY > 0 ? "down" : "up";
             }
             //当前元素移动了多少距离
             data.deltaX = event.pageX - data.startX;
@@ -236,6 +219,7 @@ define("sortable", ["mass.droppable"], function($) {
                 node.style.top = "-1000px";
                 node.style.left = "-1000px";
                 other = document.elementFromPoint(event.pageX, event.pageY);
+                
             }
             node.style.left = data.offsetX + "px";
             node.style.top = data.offsetY + "px";
@@ -243,42 +227,53 @@ define("sortable", ["mass.droppable"], function($) {
                 //然后遍历所有候选项,如果某某与other相包含即为目标
                 node.style.visibility = "visible"
                 if(other.tagName == "HTML") {
-                    return
-                }
-
-                for(i = 0; el = data.droppers[i++];) {
-                    if($.contains(el.node, other, true)) {
-                        dropper = el;
-                        break;
+                    if( ! data._dropper){
+                        // console.log("other")
+                        return
+                    }
+                   
+                }else{
+                    for(i = 0; el = data.droppers[i++];) {
+                        if($.contains(el.node, other, true)) {
+                            dropper = el;
+                            break;
+                        }
                     }
                 }
-
-               
             } else {
                 //以最简单的方式求出要交换位置的元素
-           
-                dropper = isSimpleIntersect(data.placeholder, node, data.direction, data.droppers);
+                dropper = isSimpleIntersect(data.placeholder, node, dir, data.droppers);
             }
-            if(dropper ) { //如果存在交换元素
+            if( dropper ) { //如果存在交换元素
                 dragger.refresh()
                 //判定相覆盖的面积是否达拖动块的51%以上
                 if(!data._dropper) {
                     if(isIntersect(dragger, dropper)) {
+                        //console.log("ssssssssssssssssssssssssssssss")
                         data._dropper = dropper;
                     }
                 } else {
-                    if(isolate(dragger, data._dropper, data.direction)) { //判定拖动块已离开原
-                        var a = data._dropper.node,  b = data.placeholder;
-                        switch(data.direction) { //移动占位符与用于交换的放置元素
+                    if(isIsolate(dragger, data._dropper, data.direction, data.petch)) { //判定拖动块已离开原
+                        var a = data._dropper.node,  b = data.placeholder, c = b;
+                        node = b;
+                        if(!dir){
+                            dir =  "up";
+                            while((c = c.nextSibling)){
+                                if(c == a){
+                                    dir = "down";
+                                    break;
+                                }
+                            }
+                        }
+                        switch(dir) { //移动占位符与用于交换的放置元素
                             case "down":
-                            case "right":
                                 b.parentNode.insertBefore(a, b);
                                 break
                             case "up":
-                            case "left":
                                 b.parentNode.insertBefore(b, a);
                                 break;
                         }
+                        data.petch.refresh();
                         data._dropper.refresh();
                         delete data._dropper;
                     }
@@ -296,12 +291,12 @@ define("sortable", ["mass.droppable"], function($) {
             var perch = data.placeholder
             var parent = perch.parentNode;
             var node = data.node;
-            parent.insertBefore(node, perch)
-            node.style.position = "static";
-            parent.removeChild(perch);
-            parent.style.visibility = "inherit";
-            parent.style.visibility = "visible";
-            delete data.placeholder
+            //            parent.insertBefore(node, perch)
+            //            node.style.position = "static";
+            //            parent.removeChild(perch);
+            //            parent.style.visibility = "inherit";
+            //            parent.style.visibility = "visible";
+            //            delete data.placeholder
             delete sortable.data
         }
     }
