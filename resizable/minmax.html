@@ -11,7 +11,6 @@
     <body>
         <script type="text/javascript">
             require("mass.resizable,ready",function($){
-
                 $('.drag').resizable({
                     minWidth:40,
                     minHeight:40,
@@ -21,7 +20,7 @@
             });
         </script>
 
-        <h1>普通缩放</h1>
+        <h1>设置最大最小值</h1>
         <p><a href="index.html">返回</a></p>
         <div class="drag" id="test1" style="left:20px;"></div>
 
@@ -36,5 +35,16 @@
             cursor: move;
             top: 120px;
         }
-    </style></body>
+    </style>
+    <pre>
+            require("mass.resizable,ready",function($){
+                $('.drag').resizable({
+                    minWidth:40,
+                    minHeight:40,
+                    maxWidth:250,
+                    maxHeight:250
+                });
+            });
+    </pre>
+</body>
 </html>

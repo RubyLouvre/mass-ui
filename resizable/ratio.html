@@ -18,8 +18,8 @@
             });
         </script>
 
-        <h1>等比例缩放</h1>
-        <p><a href="../index.html">返回</a></p>
+        <h1>等比例缩放,使用aspectRatio参数,为长与高之比</h1>
+        <p><a href="index.html">返回</a></p>
         <div class="drag" id="test1" style="left:20px;"></div>
 
 
@@ -33,5 +33,15 @@
             cursor: move;
             top: 120px;
         }
-    </style></body>
+    </style>
+    <pre>
+            require("mass.resizable,ready",function($){
+                $('.drag').resizable({
+                    aspectRatio: 4/3
+                });
+            });
+    </pre>
+
+
+</body>
 </html>
