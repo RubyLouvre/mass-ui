@@ -156,7 +156,6 @@ define("sortable", ["mass.droppable"], function($) {
                 return drg.bottom < drp.top;
             default:
                 var horizontal = Math.abs(petch.top -drp.top) < 1;
-                //      console.log("horizontal  "+horizontal)
                 if(horizontal){
                     console.log("petch  "+petch.right +" drp.left "+ drp.left)
                     if(petch.right < drp.left){//向右移动

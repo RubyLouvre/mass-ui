@@ -16,23 +16,28 @@ define("selectable", ["mass.droppable"], function($) {
     }
 
     var draggable = $.fn.draggable;
-
+    var droppable = $.fn.droppable;
     var selectable = $.fn.selectable = function(hash) {
-        var data = $.mix({}, defaults, hash || {})
-        data.helper = $("<div class='ui-selectable-helper'></div>");
-        data["this"] = this;
-        this.data("selectable", data);
-        this.on("mousedown.selectable", data.selector, data, handleSelectStart);
-        this.on("click.selectable", data.selector, data, handleSelectClick);
-        this.on("mousemove.selectable", data.selector, data, handleSelectDrag);
-        return this;
-    }
+            var data = $.mix({}, defaults, hash || {})
+            data.helper = $("<div class='ui-selectable-helper'></div>");
+            data["this"] = this;
+            this.on("mousedown.selectable", data.selector, {
+                selectable: data
+            }, handleSelectStart);
+            this.on("click.selectable", data.selector, {
+                selectable: data
+            }, handleSelectClick);
+            // this.on("mousemove.selectable", data.selector, data, handleSelectDrag);
+            return this;
+        }
+    selectable.defaults = defaults;
     selectable.droppers = [];
     //通过点击事件霎间完成选择
 
+
     function handleSelectClick(event) {
-        var data = event.handleObj;
-        if(!data.selectingClass) {
+        var data = event.handleObj.selectable;
+        if(!data) {
             return;
         }
         data["this"].removeClass(data.selectingClass + " " + data.selectedClass);
@@ -40,10 +45,10 @@ define("selectable", ["mass.droppable"], function($) {
         var hasSelected = false;
         for(var i = 0, drp; drp = selectable.droppers[i++];) {
             if(!hasSelected) {
-                var bool = draggable.contains(drp, drg);
+                var bool = droppable.contains(drp, drg);
                 if(bool) {
-                    selectable.nodes = [drp.element[0]]
-                    drp.element.addClass(data.selectedClass);
+                    selectable.nodes = [drp.node]
+                    drp.wrapper.addClass(data.selectedClass);
                     hasSelected = true;
                     if($.isFunction(data.selectend)) {
                         event.type = "selectend";
@@ -55,13 +60,17 @@ define("selectable", ["mass.droppable"], function($) {
     }
 
     function handleSelectStart(event) {
-        var data = event.handleObj;
-        if(!data.selectingClass) {
+        var obj = event.handleObj.selectable;
+        if(!obj) {
             return;
         }
-        draggable.textselect(false); //阻止文本被选择
-        selectable.data = data; //公开到全局，方便让其他回调也能访问到
-        $(data.appendTo).append(data.helper); //创建一个临时节点，用于显示选择区域
+        var data = $.mix({
+            startX: event.pageX,
+            startY: event.pageY
+        }, obj);
+        var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
+        var thisArr = [];
+        data.realm = nodes.children(data.filter).removeClass(data.selectedClass).get();
         data.helper.css({
             display: "none",
             left: event.pageX,
@@ -71,26 +80,20 @@ define("selectable", ["mass.droppable"], function($) {
             position: "absolute",
             borderWidth: 1,
             borderStyle: "dotted",
-            borderColor: "#ccc",
+            borderColor: "red",
             backgroundColor: "#fff",
-            opacity: .3
+            opacity: .5
         });
-        data.opos = [event.pageX, event.pageY];
-        //如果使用了事件代理，则在原基础上找到那被代理的元素
-        //如果使用了事件代理，则在原基础上找到那被代理的元素
-        var nodes = typeof data.selector == "string" ? data["this"].find(data.selector) : data["this"];
-        //再过滤那些不配被选中的子元素
-        nodes = nodes.children(data.filter);
-        //批量生成放置元素的坐标对象
-        var els = [];
-        selectable.droppers = $.map(nodes, function() {
-            els.push(this); //收集元素节点
-            var el = $(this).removeClass(data.selectedClass)
-            return draggable.locate(el);
+        $(data.appendTo).append(data.helper); //创建一个临时节点，用于显示选择区域
+        selectable.droppers = data.realm.map(function(el) {
+            thisArr.push(el); //收集元素节点
+            return new droppable.Locate(el);
         });
+        selectable.data = data; //公开到全局，方便让其他回调也能访问到
+        draggable.textselect(false); //阻止文本被选择
         if($.isFunction(data.selectstart)) {
             event.type = "selectstart";
-            data.selectstart.call(els, event, data)
+            data.selectstart.call(thisArr, event, data)
         }
     }
 
@@ -100,16 +103,26 @@ define("selectable", ["mass.droppable"], function($) {
     function handleSelectDrag(event) {
         var data = selectable.data
         if(data) {
+            var target = event.target,
+                ok = false
+            for(var i = 0, el; el = data.realm[i++];) {
+                if($.contains(el, target, true)) {
+                    ok = true;
+                    break;
+                }
+            }
+            if(!ok) {
+                return;
+            }
             if(!data._reflow_one_time) {
                 data.helper.css("display", "block")
                 data._reflow_one_time = 1;
             }
-
             //处理动态生成的选择区域
-            var x1 = data.opos[0],
-            y1 = data.opos[1],
-            x2 = event.pageX,
-            y2 = event.pageY;
+            var x1 = data.startX,
+                y1 = data.startY,
+                x2 = event.pageX,
+                y2 = event.pageY;
             if(x1 > x2) {
                 var tmp = x2;
                 x2 = x1;
@@ -133,19 +146,20 @@ define("selectable", ["mass.droppable"], function($) {
                 right: x2,
                 bottom: y2
             }
-            var fn = draggable.modes.intersect;
+            var fn = droppable.modes.intersect;
             selectable.nodes = [];
             for(var i = 0, drp; drp = selectable.droppers[i++];) {
                 var isEnter = fn(event, drg, drp);
                 if(isEnter) {
                     if(!drp['isEnter']) { //如果是第一次进入,则触发dragenter事件
                         drp['isEnter'] = 1;
-                        drp.element.addClass(data.selectingClass);
+                        drp.wrapper.addClass(data.selectingClass);
                     }
-                    selectable.nodes.push(drp.element[0])
+                    selectable.nodes.push(drp.node);
                 } else { //如果光标离开放置对象
                     if(drp['isEnter']) {
-                        drp.element.removeClass(data.selectingClass)
+                        drp.wrapper.removeClass(data.selectingClass);
+                        $.Array.remove(selectable.nodes, drp.node);
                         delete drp['isEnter'];
                     }
                 }
@@ -157,8 +171,9 @@ define("selectable", ["mass.droppable"], function($) {
         }
     }
     //当鼠标弹起，完成选择，统一冒泡到HTML节点进行处理
-    //   $(document.documentElement).on("mouseup", function(event) {
-    function handleSelectEnd(event){
+
+
+    function handleSelectEnd(event) {
         draggable.textselect(true);
         var data = selectable.data;
         if(data) {
@@ -175,6 +190,7 @@ define("selectable", ["mass.droppable"], function($) {
             });
         }
     }
-    draggable.dropscene.push(handleSelectEnd)
+    draggable.underway.push(handleSelectDrag);
+    draggable.dropscene.push(handleSelectEnd);
     return $;
 })

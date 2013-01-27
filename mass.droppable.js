@@ -148,6 +148,7 @@ define("droppable", ["mass.draggable"], function($) {
     }
     $.mix(droppable, {
         scopes: {},
+        Locate: Locate,
         defaults: defaults,
         contains: function(dropper, dragger) {
             // 判定dropper是否包含dragger
