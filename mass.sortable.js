@@ -313,3 +313,6 @@ define("sortable", ["mass.droppable"], function($) {
     draggable.dropscene.push(handleSortEnd);
     return $;
 })
+
+//https://github.com/farhadi/html5sortable/blob/master/jquery.sortable.js
+//http://farhadi.ir/projects/html5sortable/

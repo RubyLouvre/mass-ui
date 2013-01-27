@@ -7,44 +7,41 @@
         <link href="base.css" rel="stylesheet" />
         <script src="../mass_merge.js"></script>
         <title>draggable</title>
+        <style type="text/css">
+            .drag {
+                position: absolute;
+                border: 1px solid #89B;
+                background: #BCE;
+                height: 58px;
+                width: 58px;
+                cursor: move;
+                top: 240px;
+            }
+        </style>
     </head>
     <body>
         <script type="text/javascript">
             require("mass.draggable,ready",function($){
                 $('.drag').draggable({
-                   containment: $("#container")
+                    range: "window"
                 });
             });
         </script>
 
-        <h1>containment</h1>
+        <h1>range</h1>
         <pre>
-        containment：规定拖动块可活动的范围。有五种情况. <a href="index.html">返回</a>
+        range：规定拖动块可活动的范围。有五种情况. <a href="index.html">返回</a>
             如果是一个CSS表达式，将会通过选择器引擎找到第一个符合它的那个元素节点。
             如果是一个mass的节点链对象,取得其第一个元素。
             如果是一个元素节点，取其左上角与右下角的坐标。
             如果是一个包含四个数字的数组，分别是[x1,y1,x2,y2]
             如果是这三个字符串之一：parent,document,window，顾名思义，parent就是其父节点， document就是文档对象，取其左上角与右下角的坐标。
         </pre>
-          <div class="drag" style="left:20px;"></div>
-            <div class="drag" style="left:100px;"></div>
-            <div class="drag" style="left:180px;"></div>
-        <div id="container">
-          
-        </div>
-    <style type="text/css">
-        .drag {
-            position: absolute;
-            border: 1px solid #89B;
-            background: #BCE;
-            height: 58px;
-            width: 58px;
-            cursor: move;
-            top: 240px;
-        }
-        #container {
-            height: 299px;
-            border: 1px dashed #888;
-        }
-    </style></body>
+        <h1>在当前窗口范围内移动</h1>
+        <div class="drag" style="left:20px;"></div>
+        <div class="drag" style="left:100px;"></div>
+        <div class="drag" style="left:180px;"></div>
+
+
+    </body>
 </html>

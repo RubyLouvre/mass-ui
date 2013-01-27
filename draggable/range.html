@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=8" />
+        <link href="base.css" rel="stylesheet" />
+        <script src="../mass_merge.js"></script>
+        <title>draggable</title>
+    </head>
+    <body>
+        <script type="text/javascript">
+            require("mass.draggable,ready",function($){
+                $('.drag').draggable({
+                   range: $("#container")
+                });
+            });
+        </script>
+
+        <h1>range</h1>
+        <pre>
+        range：规定拖动块可活动的范围。有五种情况. <a href="index.html">返回</a>
+            如果是一个CSS表达式，将会通过选择器引擎找到第一个符合它的那个元素节点。
+            如果是一个mass的节点链对象,取得其第一个元素。
+            如果是一个元素节点，取其左上角与右下角的坐标。
+            如果是一个包含四个数字的数组，分别是[x1,y1,x2,y2]
+            如果是这三个字符串之一：parent,document,window，顾名思义，parent就是其父节点， document就是文档对象，取其左上角与右下角的坐标。
+        </pre>
+          <div class="drag" style="left:20px;"></div>
+            <div class="drag" style="left:100px;"></div>
+            <div class="drag" style="left:180px;"></div>
+        <div id="container">
+          
+        </div>
+    <style type="text/css">
+        .drag {
+            position: absolute;
+            border: 1px solid #89B;
+            background: #BCE;
+            height: 58px;
+            width: 58px;
+            cursor: move;
+            top: 240px;
+        }
+        #container {
+            height: 299px;
+            border: 1px dashed #888;
+        }
+    </style></body>
+</html>
