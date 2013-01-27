@@ -13,7 +13,7 @@
             require("mass.droppable,ready",function($){
                 $('.drag').draggable({
                     dragover: function(event, dd){
-                        $(this).text( dd.dropper.length ?  dd.dropper.text() : '' );
+                        dd.dragger.text(dd.dropper.text())
                     }
                 });
                 $('.drop').droppable({

@@ -71,7 +71,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
             return this;
         }
 
-
     function dragstart(event, multi) {
         //如果是多点拖动，存在第二个参数
         var node = multi || this,
@@ -195,7 +194,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                     top: data.revert ? data.originalY : data.offsetY
                 }, 500);
             }
-
             draggable.dropend(event, data, node); //先执行dropend回调
             draggable.dispatch(event, data, "dragend"); //再执行dragend回调
             if(data.dragtype == "drag" && data.click === false) { //阻止"非刻意"的点击事件,因为我们每点击页面,都是依次触发mousedown mouseup click事件
@@ -210,7 +208,6 @@ define("draggable", ["$event", "$attr", "$fx"], function($) {
                 draggable.patch(event, data, dragend);
                 delete draggable.dragger;
             }
-            // delete draggable.data;
             dragger.removeData("draggable");
             data.ghosting && dragger.remove(); //再移除幽灵元素
         }
