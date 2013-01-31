@@ -1,0 +1,99 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>上下左右固定2</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background:#333;
+                color:#fff;
+            }
+            body{
+                background:#555;
+                color:#fff;
+            }
+            .abs{
+                position:absolute;
+                top:40%;
+                left:5%;
+                width:100px;
+                height:100px;
+                background:#aaccff;
+                color:#0055aa;
+                font-weight:bold;
+                text-align:center;
+            }
+            .fixed{
+                position:fixed;
+                font-size:18px;
+                color:#000;
+                font-weight: 700;
+                text-align:center;
+            }
+            #head{
+                width:100%;
+                height:20%;
+                top:0;
+                left:0;
+                background:#aaccff;
+            }
+            #leftNavi{
+                width:20%;
+                height:100%;
+                top:0;
+                left:0;
+                background:#ccffaa;
+                vertical-align: middle;
+            }
+            #foot{
+                width:100%;
+                height:20%;
+                bottom:0;
+                left:0;
+                background:#aaffff;
+            }
+            #rightNavi{
+                width:20%;
+                height:100%;
+                top:0;
+                right:0;
+                background:#ccaaff;
+                vertical-align: middle;
+            }
+            .dummy{
+                width:2000px;
+                height:2000px;
+            }
+            #center{
+                width:20%;
+                height:20%;
+                top:40%;
+                left:40%;
+                background:#ccccff;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                $('.fixed').fixedable().css({
+                    opacity: 0
+                }).animate({
+                    opacity: .5
+                }, 3000)
+            });
+        </script>
+    </head>
+    <body>
+
+        <div class="dummy"></div>
+        <div class="abs">absolute</div>
+        <div id="leftNavi" class="fixed">左边固定</div>
+        <div id="rightNavi" class="fixed">右边固定</div>
+        <div id="head" class="fixed">上方固定</div>
+        <div id="foot" class="fixed">下方固定</div>
+        <div id="center" class="fixed">中间固定
+            <p><a href="index.html">返回</a></p>
+        </div>
+    </body>
+</html>

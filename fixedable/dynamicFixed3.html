@@ -1,0 +1,91 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>上下左右固定2</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background-color:#333;
+                color:#fff;
+            }
+            body{
+                background-color:#555;
+            }
+            div.stripe{
+                width:2000px;
+                height:50px;
+                margin:50px 0;
+                background:#505050;
+            }
+            #a{
+                background:#aaccff;
+                width:250px;
+                height:250px;
+            }
+            #b{
+                background:#aaffcc;
+                width:200px;
+                height:200px;
+            }
+            #c{
+                background:#ccffaa;
+                width:150px;
+                height:150px;
+            }
+            #d{
+                background:#aaffff;
+                width:100px;
+                height:100px;
+            }
+            .fixed{
+                text-align:center;
+                color:#333;
+                filter: alpha(opacity=50);
+                -moz-opacity:0.5;
+                opacity:0.5;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                for (var i = 0; i < 100; i++)
+                    $('<div class="stripe">&nbsp;</div>').appendTo('div.dummy');
+                $('div.fixed').fixedable({
+                    api: true,
+                    dynamicFixed: true,
+                    right: 100,
+                    bottom: 100
+                })
+                        .each(function(api, idx) {
+                    api.getTarget()
+                            .css('z-index', idx)
+                            .click(function() {
+                        api.fixedOpen(function() {
+                            var size = {
+                                right: '25%',
+                                bottom: (idx * 25) + '%',
+                                width: '50%',
+                                height: '24%'
+                            };
+                            api.getTarget().animate(api.getFixedSize(size), function() {
+                                api.fixedClose(size);
+                            });
+                        })
+                    })
+                })
+            });
+        </script>
+    </head>
+    <body>
+        <div style="position: relative">
+            <div id="a" class="fixed"><strong>Fixed</strong><br/>click!
+                <p><a href="index.html">返回</a></p>
+            </div>
+        </div>
+        <div id="b" class="fixed"><strong>Fixed</strong><br/>click!</div>
+        <div id="c" class="fixed"><strong>Fixed</strong><br/>click!</div>
+        <div id="d" class="fixed"><strong>Fixed</strong><br/>click!</div>
+        <div class="dummy"></div>
+    </body>
+</html>

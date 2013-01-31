@@ -1,0 +1,70 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>上下左右固定2</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background-color:#333;
+                color:#fff;
+            }
+            body{
+                background-color:#555;
+            }
+            div.stripe{
+                width:2000px;
+                height:50px;
+                margin:50px 0;
+                background:#505050;
+            }
+            #a{
+                background:#aaccff;
+            }
+            .fixed{
+                text-align:center;
+                color:#333;
+                filter: alpha(opacity=50);
+                -moz-opacity:0.5;
+                opacity:0.5;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                for (var i = 0; i < 100; i++)
+                    $('<div class="stripe">&nbsp;</div>').appendTo('div.dummy');
+                var api = $('div.fixed').fixedable({
+                    api: true,
+                    dynamicFixed: true,
+                    right: 100,
+                    bottom: 100,
+                    width: 100,
+                    height: 100
+                });
+                api.getTarget().click(function() {
+                    api.fixedOpen(function() {
+                        var size = {
+                            right: '25%',
+                            bottom: '25%',
+                            width: '50%',
+                            height: '50%'
+                        };
+                        api.getTarget().animate(api.getFixedSize(size), function() {
+                            api.fixedClose(size);
+                        });
+                    })
+                })
+            });
+        </script>
+    </head>
+    <body>
+        <div style="position: relative">
+            <div id="a" class="fixed"><strong>Fixed</strong><br/>click!
+                <p><a href="index.html">返回</a></p>
+            </div>
+        </div>
+
+        <div class="dummy"></div>
+    </body>
+</html>

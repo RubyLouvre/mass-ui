@@ -1,0 +1,85 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>上下左右固定2</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background-color:#333;
+                color:#fff;
+            }
+            body{
+                background-color:#555;
+            }
+            div.stripe{
+                width:2000px;
+                height:50px;
+                margin:50px 0;
+                background:#505050;
+            }
+            #a{
+                background:#aaccff;
+            }
+            #b{
+                background:#aaffcc;
+            }
+            #c{
+                background:#ccffaa;
+            }
+            #d{
+                background:#aaffff;
+            }
+            .fixed{
+                filter: alpha(opacity=50);
+                -moz-opacity:0.5;
+                opacity:0.5;
+                text-align:center;
+                color:#333;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                for (var i = 0; i < 100; i++)
+                    $('<div class="stripe">&nbsp;</div>').appendTo('div.dummy');
+
+                $('div.fixed').each(function(v, idx) {
+                    var orgCss = {}, newCss = {};
+                    var hPos = (idx % 2) ? 'right' : 'left';
+                    var vPos = (idx < 2) ? 'top' : 'bottom';
+
+                    orgCss[hPos] = orgCss[vPos] = 0;
+                    newCss[hPos] = newCss[vPos] = ((idx + 1) * 10) + '%';
+                    orgCss['width'] = orgCss['height'] = 100;
+                    newCss['width'] = newCss['height'] = (80 - idx * 20) + '%';
+
+                    var css = orgCss;
+                    var api = $(this).fixedable($.mix({
+                        api: true,
+                        dynamicFixed: true
+                    }, css));
+
+                    api.getTarget().click(function() {
+                        css = (css == orgCss ? newCss : orgCss);
+                        api.fixedOpen(function() {
+                            api.getTarget().animate(api.getFixedSize(css), function() {
+                                api.fixedClose(css);
+                            });
+                        });
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+     
+        <div id="a" class="fixed"><strong>Fixed</strong><br>click me!</a>  
+            <p><a href="index.html">返回</a></p>
+        </div>
+        <div id="b" class="fixed"><strong>Fixed</strong><br>click me!</a></div>
+        <div id="c" class="fixed"><strong>Fixed</strong><br>click me!</a></div>
+        <div id="d" class="fixed"><strong>Fixed</strong><br>click me!</a></div>
+        <div class="dummy"></div>
+    </body>
+</html>
