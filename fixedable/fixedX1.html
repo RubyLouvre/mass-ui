@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>fixedable</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background:#909090;
+            }
+            body{
+                margin:0;
+            }
+            #target{
+                width:200px;
+                height:400px;
+                background:#aaccff;
+            }
+            #container{
+                padding:50px 0 0 300px;
+                width:2000px;
+            }
+            #static1{
+                width:200px;
+                height:800px;
+                background:#707070;
+                float:left;
+                margin-right:50px;
+            }
+            #static2{
+                width:200px;
+                height:800px;
+                background:#707070;
+                float:left;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                $('#target').fixedable({
+                    top: 50,
+                    left: 50
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        <span style="position:absolute;">请左右移动滚动条 </span>
+        <div id="container">
+            <div id="target">fixed</div>
+            <div id="static1">static</div>
+            <div id="static2">static</div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>fixedable</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background-color:#333;
+                color:#fff;
+            }
+            body{
+                margin:0;
+            }
+            #a{
+                background:#aaccff;
+            }
+            #b{
+                background:#aaffcc;
+            }
+            #c{
+                background:#ccffaa;
+            }
+            #d{
+                background:#aaffff;
+            }
+            .fixed{
+                color:#303030;
+                text-align:center;
+            }
+            #container{
+                width:600px;
+                height:480px;
+                background:#505050;
+                margin:5px auto;
+            }
+            #dummy{
+                width:2000px;
+                height:2000px;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                var targets = $('#a,#b,#c,#d');
+                targets.each(function(v, idx) {
+                    var size, orgSize;
+                    var target = targets.eq(idx);
+                    target.css('opacity', .7).css('z-index', idx);
+                    size = orgSize = {
+                        width: 250 - (idx * 50),
+                        height: 250 - (idx * 50),
+                        right: 25 * idx,
+                        bottom: 25 * idx
+                    }
+                    var fx = target.fixedable(
+                            $.mix({
+                        api: true,
+                        dynamicFixed: true,
+                        baseNode: '#container',
+                        fixedX: false
+                    }, size)
+                            );
+                    target.click(function() {
+                        fx.fixedOpen(function() {
+                            size = (size == orgSize ? {
+                                right: 100,
+                                bottom: idx * 120,
+                                width: 400,
+                                height: 120
+                            } : orgSize);
+                            target.animate(fx.getFixedSize(size), function() {
+                                fx.fixedClose(size);
+                            });
+                        })
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        baseNode : '#container'<br/>
+        fixedX : false
+        <div id="container">Container
+            <div id="a" class="fixed">click!</div>
+            <div id="b" class="fixed">click!</div>
+            <div id="c" class="fixed">click!</div>
+            <div id="d" class="fixed">click!</div>
+        </div>
+        <div id="dummy">
+        </div>
+    </body>
+</html>

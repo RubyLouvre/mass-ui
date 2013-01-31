@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <title>fixedable</title>
+        <script src="../mass_merge.js"></script>
+        <style>
+            html{
+                background:#909090;
+            }
+            body{
+                margin:0;
+                height: 2500px;
+            }
+            #target{
+                width:150px;
+                height:150px;
+                background:#aaccff;
+            }
+            #container{
+                width:600px;
+                height:2000px;
+                margin:50px auto;
+                background:#707070;
+            }
+            #dummy{
+                width:2000px;
+                height:100px;
+            }
+        </style>
+        <script>
+
+            require("mass.fixedable,ready", function($) {
+                $('#target').fixedable({
+                    baseNode: '#container',
+                    bottom: 0,
+                    right: 0,
+                    baseY: false
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id="container">
+            <div id="target">Fixed  <p><a href="index.html">返回</a></p></div>
+          
+        </div>
+        <div id="dummy"></div>
+    </body>
+</html>

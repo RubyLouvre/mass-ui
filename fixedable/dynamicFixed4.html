@@ -51,29 +51,33 @@
             require("mass.fixedable,ready", function($) {
                 for (var i = 0; i < 100; i++)
                     $('<div class="stripe">&nbsp;</div>').appendTo('div.dummy');
-                $('div.fixed').fixedable({
-                    api: true,
-                    dynamicFixed: true,
-                    right: 100,
-                    bottom: 100
-                })
-                        .each(function(api, idx) {
-                    api.getTarget()
-                            .css('z-index', idx)
-                            .click(function() {
+
+                $('div.fixed').each(function(v,idx) {
+                    var orgSize;
+                    var size = orgSize = {
+                        width: 250 - (idx * 50),
+                        height: 250 - (idx * 50),
+                        right: 100 + (idx * 25),
+                        bottom: 100 + (idx * 25)
+                    }
+                    var api = $(this).css('z-index', idx).fixedable($.extend({
+                        api: true,
+                        dynamicFixed: true
+                    }, size));
+                    api.getTarget().click(function() {
                         api.fixedOpen(function() {
-                            var size = {
+                            size = (size == orgSize ? {
                                 right: '25%',
                                 bottom: (idx * 25) + '%',
                                 width: '50%',
                                 height: '24%'
-                            };
+                            } : orgSize);
                             api.getTarget().animate(api.getFixedSize(size), function() {
                                 api.fixedClose(size);
                             });
                         })
-                    })
-                })
+                    });
+                });
             });
         </script>
     </head>
