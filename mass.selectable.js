@@ -164,6 +164,7 @@ define("selectable", ["mass.droppable"], function($) {
                     }
                 }
             }
+            draggable.clearSelection();
             if($.isFunction(data.select)) {
                 event.type = "select";
                 data.select.call(selectable.nodes, event, data);
