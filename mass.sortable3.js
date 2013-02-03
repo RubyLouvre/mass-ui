@@ -299,12 +299,12 @@ define("sortable", ["mass.droppable"], function($) {
             var perch = data.placeholder
             var parent = perch.parentNode;
             var node = data.node;
-            //            parent.insertBefore(node, perch)
-            //            node.style.position = "static";
-            //            parent.removeChild(perch);
-            //            parent.style.visibility = "inherit";
-            //            parent.style.visibility = "visible";
-            //            delete data.placeholder
+            parent.insertBefore(node, perch)
+            node.style.position = "static";
+            parent.removeChild(perch);
+            parent.style.visibility = "inherit";
+            parent.style.visibility = "visible";
+            delete data.placeholder
             delete sortable.data
         }
     }

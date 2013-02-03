@@ -444,3 +444,5 @@ define(["event", "fx", "attr"], function($) {
 
 
 });
+
+//http://d.hatena.ne.jp/cyokodog/20120427/exflexfixed01
