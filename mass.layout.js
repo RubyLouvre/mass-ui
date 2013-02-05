@@ -1,159 +1,71 @@
 define("mass.layout", ["css", "attr"], function($) {
 
-    function wrap(item, resize) {
-        var that = {};
-        "min,max".replace($.rword, function(name) {
-            that[name + 'Size'] = function(value) {
-                var l = item.data('jlayout');
-                if (l) {
-                    return l[name + 'imum'](that);
-                } else {
-                    if (value.width !== undefined) {
-                        item.css(name + '-width', value.width);
-                    }
-                    if (value.height !== undefined) {
-                        item.css(name + '-height', value.height);
-                    }
-                    return item;
-                }
-            };
-        });
-        var node = item[0]
-
-        $.mix(that, {
-            doLayout: function() {
-                var l = item.data('jlayout');
-                if (l) {
-                    l.layout(that);
-                }
-                item.css("position", 'absolute');
-            },
-            isVisible: function() {
-                return !$.isHidden(node)
-            },
-            insets: function() {
-                var p = wrap.padding(item);
-                var b = wrap.border(item);
-                return {
-                    top: p.top,
-                    bottom: p.bottom + b.bottom + b.top,
-                    left: p.left,
-                    right: p.right + b.right + b.left
-                };
-            },
-            bounds: function(value) {
-                var tmp = {};
-                if (value) {
-                    if (typeof value.x === 'number') {
-                        tmp.left = value.x;
-                    }
-                    if (typeof value.y === 'number') {
-                        tmp.top = value.y;
-                    }
-                    if (typeof value.width === 'number') {
-                        tmp.width = (value.width - (item.outerWidth(true) - item.width()));
-                        tmp.width = (tmp.width >= 0) ? tmp.width : 0;
-                    }
-                    if (typeof value.height === 'number') {
-                        tmp.height = value.height - (item.outerHeight(true) - item.height());
-                        tmp.height = (tmp.height >= 0) ? tmp.height : 0;
-                    }
-                    item.css(tmp);
-                    return item;
-                } else {
-                    tmp = item.position();
-                    return {
-                        x: tmp.left,
-                        y: tmp.top,
-                        width: item.outerWidth(false),
-                        height: item.outerHeight(false)
-                    };
-                }
-            },
-            preferredSize: function() {
-                var minSize, maxSize, margin = wrap.margin(item),
-                        size = {
-                    width: 0,
-                    height: 0
-                },
-                l = item.data('jlayout');
-                if (l && resize) {
-                    size = l.preferred(that);
-                    minSize = that.minSize();
-                    maxSize = that.maxSize();
-                    size.width += margin.left + margin.right;
-                    size.height += margin.top + margin.bottom;
-                    if (size.width < minSize.width || size.height < minSize.height) {
-                        size.width = Math.max(size.width, minSize.width);
-                        size.height = Math.max(size.height, minSize.height);
-                    } else if (size.width > maxSize.width || size.height > maxSize.height) {
-                        size.width = Math.min(size.width, maxSize.width);
-                        size.height = Math.min(size.height, maxSize.height);
-                    }
-                } else {
-                    size = that.bounds();
-                    size.width += margin.left + margin.right;
-                    size.height += margin.top + margin.bottom;
-                }
-                return size;
-            }
-        });
-        return that;
-    }
-    var num = function(value) {
-        return parseInt(value, 10) || 0;
-    };
-    "border,margin,padding".replace($.rword, function(name) {
-        wrap[name] = function(item) {
-            var postfix = name === "border" ? "-width" : "";
-            return {
-                top: num(item.css(name + '-top' + postfix)),
-                bottom: num(item.css(name + '-bottom' + postfix)),
-                left: num(item.css(name + '-left' + postfix)),
-                right: num(item.css(name + '-right' + postfix))
-            };
-        };
-    });
     $.fn.layout = function(options) {
-        var opts = $.extend({}, $.fn.layout.defaults, options);
+        var opts = $.mix({}, $.fn.layout.defaults, options);
         return this.each(function() {
-            var element = $(this),
-                    o = (element.data('layout')) ? $.mix(opts, element.data('layout')) : opts,
-                    elementWrapper = wrap(element, o.resize);
-            o.items = [];
-            var xtype = o.type;
-            switch (xtype) {
-                case "border":
-                    "north,south,west,east,center".replace($.rword, function(name) {
-                        if (element.children().hasClass(name)) {
-                            o[name] = wrap(element.children('.' + name + ':first'));
-                        }
-                    });
-                    break;
-                case "grid":
-                case "flexGrid":
-                case "column":
-                case "flow":
-                    element.children().each(function(i) {
-                        if (!$(this).hasClass('ui-resizable-handle')) {
-                            o.items[i] = wrap($(this));
-                        }
-                    });
-                    break;
-            }
-            element.data('jlayout', jLayout[xtype](o));
-            if (o.resize) {
-                elementWrapper.bounds(elementWrapper.preferredSize());
-            }
-
-            elementWrapper.doLayout();
-            element.css( "position","relative");
-
+            var elem = $(this)
+            var layout = elem.data('layout');
+            var options = layout ? $.mix(opts, layout) : opts;
+            $.fn.layout[options.type](elem, options);
         });
     };
     $.fn.layout.defaults = {
         resize: true,
         type: 'grid'
     };
+    //让本元素相对定位，求得它的最大面积的孩子，然后全部孩子通过对内容区进行拉伸，
+    //统一为此面积，然后逐一绝对定位
+    //最后修正本元素的大小
+    $.fn.layout.grid = function(elem, opts) {
 
+        var children = [], w = [], h = [];
+        elem[0].style.position = "relative";
+        elem.children().each(function(el) {
+            el = $(this);
+            this.style.position = "absolute";
+            children.push(el);
+            w.push(parseFloat(el.outerWidth(true)));
+            h.push(parseFloat(el.outerHeight(true)));
+        });
+
+        var maxWidth = Math.max.apply(0, w);
+        var maxHeight = Math.max.apply(0, h);
+
+        var row = 0, col, delta, left, top;
+        var cols = parseFloat(opts.cols) || children.length;
+
+        var hgap = parseFloat(opts.hgap) || 1;
+        var vgap = parseFloat(opts.vgap) || 1;
+
+        for (var i = 0, el; el = children[i]; i++) {
+
+            col = i % cols;
+            if (i !== 0 && col === 0) {
+                row++;
+            }
+            left = (maxWidth + hgap) * col;
+            top = (maxHeight + vgap) * row;
+
+            el.css({
+                top: top,
+                left: left
+            });
+            delta = maxWidth - w[i];
+            if (delta) {
+                el.width("+=" + delta);
+            }
+            delta = maxHeight - h[i];
+            if (delta) {
+                el.height("+=" + delta);
+            }
+        }
+
+        elem.width(maxWidth * cols + hgap * (cols - 1));
+        elem.height(maxHeight * (row + 1) + vgap * row);
+
+
+    }
+
+
+    return $;
 });
