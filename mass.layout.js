@@ -60,23 +60,26 @@ define("mass.layout", ["css", "attr"], function($) {
                 el.height("+=" + delta);
             }
         }
-
-        elem.width(maxWidth * cols + hgap * (cols - 1));
-        elem.height(maxHeight * (row + 1) + vgap * row);
-
-
-    }
+        elem.width(1);//通过这种方式完美消息滚动条
+        elem.width(elem[0].scrollWidth);
+        elem.height(1);
+        elem.height(elem[0].scrollHeight);
+    };
     //充许每行的元素的宽不一样，但高必须一致
     //  cols 一行共有多少列
     //  hgap 每列之间的距离 1
     //  vgap 每行之间的距离 1
-    var sum = function() {
-        var ret = 0;
-        for (var i = 0; i < arguments.length; i++) {
-            ret += arguments[i];
+    function flexgrid(array, prop, callback, obj) {
+        var max = Math.max.apply(0, array.values);
+        for (var i = 0, el; el = array[i]; i++) {
+            callback(el)
+            var delta = max - array.values[i]
+            if (delta) {
+                el[prop]("+=" + delta);//补高
+            }
         }
-        return ret;
-    };
+        obj[prop] += max;
+    }
     $.fn.layout.flexgrid = function(elem, opts) {
         var children = [], h = [], w = [];
         elem[0].style.position = "relative";
@@ -87,63 +90,60 @@ define("mass.layout", ["css", "attr"], function($) {
             w.push(parseFloat(el.outerWidth(true)));
             h.push(parseFloat(el.outerHeight(true)));
         });
-        var row = 0, col, delta, left, top;
+        var row = 0;
         var cols = parseFloat(opts.cols) || children.length;
         var hgap = parseFloat(opts.hgap) || 1;
         var vgap = parseFloat(opts.vgap) || 1;
-        var rowHeights = [], rowElements = [], rowHeight;
-        var outerWidth = 0;
-        var outerHeight = 0;
-        var heightObject = {};
+
+        var colsObject = {};
+        var rowsObject = {};
+        var outerObject = {
+            width: 0,
+            height: 0
+        }
         //处理每一行的高与top值
-        for (var i = 0, el, last = children.length - 1; el = children[i]; i++) {
-            rowHeights.push(h[i]);
-            rowElements.push(el);
-            col = i % cols;//当前列数
-            if (!heightObject[col]) {
-                heightObject[col] = [];
-                heightObject[col].max = 0;
+        for (var i = 0, el; el = children[i]; i++) {
+            var col = i % cols;//当前列数
+            var colsArray = colsObject[col];
+            if (!colsArray) {
+                colsArray = colsObject[col] = [];
+                colsArray.values = [];
             }
-            if (heightObject[col]) {
-                heightObject[col].push(el[0]);
-                if (heightObject[col].max <= h[i]) {
-                    heightObject[col].max = h[i];
-                }
+            colsArray.push(el);
+            colsArray.values.push(w[i])
+            var rowsArray = rowsObject[row];
+            if (!rowsArray) {
+                rowsArray = rowsObject[row] = [];
+                rowsArray.values = [];
             }
-            //如果到每行的最后一个或到最后一个
-            if (col === cols - 1 || i === last) {
+            rowsArray.push(el);
+            rowsArray.values.push(h[i])
+            //如果到每行的最后一个
+            if (col === cols - 1) {
                 row++;
-                rowHeight = Math.max.apply(0, rowHeights);
-                for (var k = 0, rowElement; rowElement = rowElements[k]; k++) {
-                    //只有求出每行的最高值后，才能设置这一行的top值
-                    rowElement.css("top", outerHeight + vgap * (row - 1))
-                    delta = rowHeight - rowHeights[k];//求得差值
-                    if (delta) {
-                        rowElement.height("+=" + delta);//补高
-                    }
-                }
-                outerHeight += rowHeight;
-                rowElements = [];
-                rowHeights = [];
             }
         }
+
 //处理每一列的宽与left值
-        for (var i in heightObject) {
-            if (heightObject.hasOwnProperty(i)) {
-                $(heightObject[i]).css({
-                    width: heightObject[i].max,
-                    left: outerWidth + i * hgap
-                });
-                outerWidth += heightObject[i].max;
+        for (var i in colsObject) {
+            if (colsObject.hasOwnProperty(i)) {
+                flexgrid(colsObject[i], "width", function(el) {
+                    el.css("left", outerObject.width + i * hgap);
+                }, outerObject);
             }
         }
-        //     console.log(outerWidth)
-        //  console.log(outerWidth + (cols -1 ) * hgap )
+        //处理每一行的宽与top值
+        for (i in rowsObject) {
+            if (rowsObject.hasOwnProperty(i)) {
+                flexgrid(rowsObject[i], "height", function(el) {
+                    el.css("top", outerObject.height + i * vgap);
+                }, outerObject);
+            }
+        }
         elem.width(1);
         elem.width(elem[0].scrollWidth);
         elem.height(1);
         elem.height(elem[0].scrollHeight);
-
     };
 
 
