@@ -153,13 +153,13 @@ define("mass.layout", ["css", "attr"], function($) {
             item.width(width)
         }
     }
-//┌────────────┐
-//│　　 　　north　　　　 │
-//├──┬─────┬───┤
-//│west│ center  │east │
-//├──┴─────┴───┤
-//│　　 　　south　　　　 │
-//└────────────┘
+//┌────────────────────┐
+//│　　 　north　  　　│
+//├──────┬───────┬─────┤
+//│west  │center │east │
+//├──────┴───────┴─────┤
+//│　　 　south　　    │
+//└────────────────────┘
 //border 布局：border 布局也称边界布局，他将页面分隔为 west,east,south,north,center 这五个部分， 我们需要在在其 items 中指定 
 //使用 region 参数为其子元素指定具体位置。 注意：north 和 south 部分只能设置高度（height），
 //west 和 east 部分只能设置宽度（width）。north south west east 区域变大，center 区域就变小了。
