@@ -1,0 +1,51 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+            .border {
+                overflow: auto;
+                background:yellow;
+            }
+            .c {
+                background-color: rgb(220,220,220);
+                border: 1px solid rgb(200,200,200);
+                text-align: center;
+                width: 100px;
+                height: 100px;
+                display: inline-block;
+            }
+
+        </style>
+        <script src="../mass_merge.js"></script>
+        <script type="text/javascript">
+            require("mass.layout,ready", function($) {
+                $(".border").layout();
+
+            });
+        </script>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        <h1>Border</h1>
+        <div data-layout='{"type": "border", "hgap": 3, "vgap": 3}' class="border">
+            <div class="c" data-region="center">
+                Center
+            </div>
+            <div class="c" data-region="east">
+                East
+            </div>
+            <div class="c" data-region="west">
+                West
+            </div>
+            <div class="c" data-region="north">
+                North
+            </div>
+            <div class="c" data-region="south">
+                South
+            </div>
+        </div>
+
+    </body>
+</html>

@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+            .flex-grid {
+                overflow: auto;
+                background:yellow;
+            }
+            .c {
+                background-color: rgb(220,220,220);
+                border: 1px solid rgb(200,200,200);
+                text-align: center;
+                width: 100px;
+                height: 100px;
+                display: inline-block;
+            }
+
+            .h {
+                height: 170px;
+            }
+
+            .d {
+                width: 150px;
+            }
+            
+
+        </style>
+        <script src="../mass_merge.js"></script>
+        <script type="text/javascript">
+            require("mass.layout,ready", function($) {
+                $(".flex-grid").layout();
+         
+            });
+        </script>
+    </head>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        <h1>3x2 flex-grid</h1>
+        <div data-layout='{"type": "flexgrid", "hgap": 3, "vgap": 3, "cols": 3, "rows": 2}' class="flex-grid">
+            <div class="c">
+                One
+            </div>
+            <div class="c d">
+                Two
+            </div>
+            <div class="c">
+                Three
+            </div>
+            <div class="c">
+                Four
+            </div>
+            <div class="c d h">
+                Five
+            </div>
+            <div class="c">
+                Six
+            </div>
+        </div>		
+
+
+    </body>
+</html>

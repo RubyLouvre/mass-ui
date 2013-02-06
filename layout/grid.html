@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+            .grid {
+                overflow: auto;
+                background:yellow;
+            }
+
+            .c {
+                background-color: red;
+                border: 1px solid rgb(200,200,200);
+                text-align: center;
+                width: 100px;
+                height: 100px;
+                display: inline-block;
+            }
+
+            .cc {
+                background:burlywood;
+                border: 2px solid blueviolet;
+                text-align: center;
+                margin: 1px;
+                width: 100px;
+                height: 120px;
+                display: inline-block;
+            }
+            .ccc {
+                background-color: rgb(220,220,220);
+                border: 3px solid brown;
+                text-align: center;
+                width: 100px;
+                height: 120px;
+                display: inline-block;
+            }
+        </style>
+        <script src="../mass_merge.js"></script>
+        <script type="text/javascript">
+            require("mass.layout,ready", function($) {
+                $("#grid1").layout();
+                $("#grid2").layout();
+            });
+        </script>
+    </head>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        <h1>2x2 grid</h1>
+
+        <div data-layout='{"type": "grid", "hgap": 3, "vgap": 3, "cols": 2}' class="grid" id="grid1">
+            <div class="c">
+                One
+            </div>
+            <div class="c">
+                Two
+            </div>
+            <div class="c">
+                Three
+            </div>
+            <div class="c">
+                Four
+            </div>
+        </div>
+        <div data-layout='{"type": "grid", "hgap": 3, "vgap": 3, "cols": 3}' class="grid" id="grid2">
+            <div class="c">
+                One
+            </div>
+            <div class="cc">
+                Two
+            </div>
+            <div class="ccc">
+                Three
+            </div>
+            <div class="c">
+                Four
+            </div>
+            <div class="cc">
+                Five
+            </div>
+            <div class="ccc">
+                Six
+            </div>
+        </div>
+    </body>
+</html>

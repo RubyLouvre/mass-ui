@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <style>
+            .flow {
+                overflow: auto;
+                width: 350px;
+                height: 200px;
+                border:4px solid brown;
+                background:bisque;
+                padding:10px;
+            }
+
+            .flow div {
+                width: auto;
+                height: auto;
+            }
+
+            .large {
+                font-size: 3.5em;
+            }
+
+            .small {
+                font-size: 2em;
+            }
+
+            .medium {
+                font-size: 3em;
+            }
+            .c {
+                background-color: rgb(220,220,220);
+                border: 1px solid blueviolet;
+                text-align: center;
+                width: 100px;
+                height: 100px;
+                display: inline-block;
+            }
+        </style>
+        <script src="../mass_merge.js"></script>
+        <script type="text/javascript">
+            require("mass.layout,ready", function($) {
+                $(".flow").first().layout();
+                $(".flow").eq(1).layout({alignment: "center"});
+                $(".flow").eq(2).layout();
+            });
+        </script>
+    </head>
+    <body>
+        <p><a href="index.html">返回</a></p>
+        <div class="flow" data-layout='{"type": "flow", "resize": false}'>
+            <div class="c small">
+                One
+            </div>
+            <div class="c medium">
+                Two
+            </div>
+            <div class="c medium">
+                Three
+            </div>
+            <div class="c large">
+                Four
+            </div>
+            <div class="c small">
+                Five
+            </div>
+        </div>
+
+        <div class="flow" data-layout='{"type": "flow", "resize": false}'>
+            <div class="c small">
+                One
+            </div>
+            <div class="c medium">
+                Two
+            </div>
+            <div class="c medium">
+                Three
+            </div>
+            <div class="c large">
+                Four
+            </div>
+            <div class="c small">
+                Five
+            </div>
+        </div>
+
+        <div class="flow" data-layout='{"type": "flow", "resize": false, alignment:"right"}'>
+            <div class="c small">
+                One
+            </div>
+            <div class="c medium">
+                Two
+            </div>
+            <div class="c medium">
+                Three
+            </div>
+            <div class="c large">
+                Four
+            </div>
+            <div class="c small">
+                Five
+            </div>
+        </div>
+    </body>
+</html>
