@@ -45,11 +45,10 @@ define("mass.layout", ["css", "attr"], function($) {
     }
 
     $.fn.layout.grid = function(elem, opts) {
-        sandwich(elem, opts, function() {
+        sandwich(elem, opts, function(delta) {
             var maxWidth = Math.max.apply(0, opts.widths);
             var maxHeight = Math.max.apply(0, opts.heights);
-            var row = -1,
-                    delta;
+            var row = -1;
             for (var i = 0, el; el = opts.items[i]; i++) {
                 var col = i % opts.cols; //当前列数
                 if (col === 0) {
@@ -210,14 +209,14 @@ define("mass.layout", ["css", "attr"], function($) {
         });
     };
 
-    function adjuestRow(els, w, opts, top) {
+    function adjuestFlow(els, opts, top, www) {
         var left = opts.left;
         for (var i = 0, el; el = els[i]; i++) {
             el.css({
                 left: left,
                 top: top
             });
-            left += w[i] + opts.hgap;
+            left += www[i] + opts.hgap;
         }
         var align = opts.alignment;
         if (align === "left")
@@ -233,51 +232,37 @@ define("mass.layout", ["css", "attr"], function($) {
         }
     }
     $.fn.layout.flow = function(elem, opts) {
-        var children = [],
-                h = [],
-                w = [];
-        elem[0].style.position = "relative";
-        elem.children().each(function(el) {
-            el = $(this);
-            this.style.position = "absolute";
-            children.push(el);
-            w.push(parseFloat(el.outerWidth(true)));
-            h.push(parseFloat(el.outerHeight(true)));
-        });
-        opts.alignment = /left|right|center/i.test(opts.alignment) ? opts.alignment : "left";
-        opts.hgap = parseFloat(opts.hgap) || 1;
-        opts.vgap = parseFloat(opts.vgap) || 1;
-        opts.width = elem.innerWidth();
-        "left,top,right".replace($.rword, function(name) {
-            opts[name] = parseFloat(elem.css("padding-" + name));
-        });
-        var rowElements = [],
-                rowWidths = [],
-                rowHeights = [],
-                delta = 0,
-                top = opts.top,
-                left
-        for (var i = 0, el; el = children[i]; i++) {
-            delta += w[i] + opts.hgap;
-            if (delta < opts.width) {
-                rowElements.push(el);
-                rowWidths.push(w[i]);
-                rowHeights.push(h[i])
-
-            } else {
-                adjuestRow(rowElements, rowWidths, opts, top);
-                top += Math.max.apply(0, rowHeights) + opts.vgap;
-                delta = opts.left;
-                rowElements = [el];
-                rowWidths = [w[i]];
-                rowHeights = [h[i]];
+        var width = elem.width();
+        sandwich(elem, opts, function() {
+            opts.alignment = /left|right|center/i.test(opts.alignment) ? opts.alignment : "left";
+            var innerWidth = opts.width = elem.innerWidth();
+            var els = [],
+                    www = [],
+                    hhh = [],
+                    delta = 0,
+                    top = opts.top;
+            for (var i = 0, el; el = opts.items[i]; i++) {
+                var ww = opts.widths[i];
+                var hh = opts.heights[i];
+                delta += ww + opts.hgap;
+                if (delta < innerWidth) {
+                    els.push(el);
+                    www.push(ww);
+                    hhh.push(hh);
+                } else {
+                    adjuestFlow(els, opts, top, www);
+                    top += Math.max.apply(0, hhh) + opts.vgap;
+                    delta = opts.left;
+                    els = [el];
+                    www = [ww];
+                    hhh = [hh];
+                }
             }
-        }
-        adjuestRow(rowElements, rowWidths, opts, top);
-        elem.height(1);
-        elem.height(elem[0].scrollHeight);
+            adjuestFlow(els, opts, top, www);
+        });
+        elem.width(width);
 
-    }
+    };
 
 
     return $;
