@@ -231,7 +231,7 @@ define("mass.layout", ["css", "attr"], function($) {
         elem.height(elem[0].scrollHeight);
     };
     function adjuestRow(els, w, opts, top) {
-        var left = 0;
+        var left = opts.left;
         for (var i = 0, el; el = els[i]; i++) {
             el.css({
                 left: left,
@@ -245,6 +245,8 @@ define("mass.layout", ["css", "attr"], function($) {
         var detal = opts.width - left+ opts.hgap;
         if (align === "center") {
             detal = detal / 2;
+        }else{
+            detal = detal - opts.right;
         }
         for (i = 0; el = els[i]; i++) {
             el.css("left", "+=" + detal);
@@ -265,8 +267,11 @@ define("mass.layout", ["css", "attr"], function($) {
         opts.alignment = /left|right|center/i.test(opts.alignment) ? opts.alignment : "left";
         opts.hgap = parseFloat(opts.hgap) || 1;
         opts.vgap = parseFloat(opts.vgap) || 1;
-        opts.width = elem.width()
-        var rowElements = [], rowWidths = [], rowHeights = [], delta = 0, top = 0;
+        opts.width = elem.innerWidth()
+        "left,top,right".replace($.rword, function(name){
+            opts[name] =parseFloat(elem.css("padding-"+name));
+        });
+        var rowElements = [], rowWidths = [], rowHeights = [], delta = 0, top = opts.top, left
         for (var i = 0, el; el = children[i]; i++) {
             delta += w[i] + opts.hgap;
             if (delta < opts.width) {
@@ -276,15 +281,12 @@ define("mass.layout", ["css", "attr"], function($) {
                 
             } else {
                 adjuestRow(rowElements, rowWidths, opts, top);
-
                 top += Math.max.apply(0, rowHeights) + opts.vgap;
-                delta = 0;
+                delta = opts.left;
                 rowElements = [el];
                 rowWidths = [w[i]];
                 rowHeights = [h[i]];
             }
-
-            console.log("delta : " + delta)
         }
         adjuestRow(rowElements, rowWidths, opts, top);
         elem.height(1);
