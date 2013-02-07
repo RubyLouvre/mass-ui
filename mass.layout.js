@@ -49,61 +49,56 @@ define("mass.layout", ["css", "attr"], function($) {
             var maxWidth = Math.max.apply(0, opts.widths);
             var maxHeight = Math.max.apply(0, opts.heights);
             var row = -1,
-                delta;
-            for(var i = 0, el; el = opts.items[i]; i++) {
+                    delta;
+            for (var i = 0, el; el = opts.items[i]; i++) {
                 var col = i % opts.cols; //当前列数
-                if(col === 0) {
+                if (col === 0) {
                     row++; //当前行数
                 }
-                el.css({ //父节点的paddingLeft + 这一行的格子总宽 +间隔宽度
+                el.css({//父节点的paddingLeft + 这一行的格子总宽 +间隔宽度
                     left: opts.left + (maxWidth + opts.hgap) * col,
                     top: opts.top + (maxHeight + opts.vgap) * row
                 });
                 delta = maxWidth - opts.widths[i];
-                if(delta) { //确保每个格子的outerWidth一致
+                if (delta) { //确保每个格子的outerWidth一致
                     el.width("+=" + delta);
                 }
                 delta = maxHeight - opts.heights[i];
-                if(delta) { //确保每个格子的outerHeight一致
+                if (delta) { //确保每个格子的outerHeight一致
                     el.height("+=" + delta);
                 }
             }
         });
     };
-    //充许每行的元素的宽不一样，但高必须一致
-    //  cols 一行共有多少列
-    //  hgap 每列之间的距离 1
-    //  vgap 每行之间的距离 1
 
-    function flexgrid(array, prop, callback, obj) {
+    function adjustGrid(array, prop, callback, obj) {
         var max = Math.max.apply(0, array.values);
-        for(var i = 0, el; el = array[i]; i++) {
+        for (var i = 0, el; el = array[i]; i++) {
             callback(el, obj[prop])
             var delta = max - array.values[i]
-            if(delta) {
+            if (delta) {
                 el[prop]("+=" + delta); //补高
             }
         }
         obj[prop] += max;
     }
     $.fn.layout.flexgrid = function(elem, opts) {
-
         sandwich(elem, opts, function() {
             var row = -1,
-                colsObject = {},
-                rowsObject = {},
-                outerObject = {
-                    width: 0,
-                    height: 0
-                };
+                    colsObject = {},
+                    rowsObject = {},
+                    outerObject = {
+                width: 0,
+                height: 0
+            };
             //处理每一行的高与top值
-            for(var i = 0, el; el = opts.items[i]; i++) {
+            for (var i = 0, el; el = opts.items[i]; i++) {
                 var col = i % opts.cols; //当前列数
-                if(col === 0) {
+                if (col === 0) {
                     row++; //当前行数
                 }
                 var colsArray = colsObject[col];
-                if(!colsArray) {
+                if (!colsArray) {
                     colsArray = colsObject[col] = [];
                     colsArray.values = [];
                 }
@@ -111,7 +106,7 @@ define("mass.layout", ["css", "attr"], function($) {
                 colsArray.values.push(opts.widths[i]);
 
                 var rowsArray = rowsObject[row];
-                if(!rowsArray) {
+                if (!rowsArray) {
                     rowsArray = rowsObject[row] = [];
                     rowsArray.values = [];
                 }
@@ -121,37 +116,23 @@ define("mass.layout", ["css", "attr"], function($) {
             }
 
             //处理每一列的宽与left值
-            for(i in colsObject) {
-                if(colsObject.hasOwnProperty(i)) {
-                    flexgrid(colsObject[i], "width", function(el, val) {
+            for (i in colsObject) {
+                if (colsObject.hasOwnProperty(i)) {
+                    adjustGrid(colsObject[i], "width", function(el, val) {
                         el.css("left", opts.left + val + i * opts.hgap);
                     }, outerObject);
                 }
             }
             //处理每一行的宽与top值
-            for(i in rowsObject) {
-                if(rowsObject.hasOwnProperty(i)) {
-                    flexgrid(rowsObject[i], "height", function(el, val) {
+            for (i in rowsObject) {
+                if (rowsObject.hasOwnProperty(i)) {
+                    adjustGrid(rowsObject[i], "height", function(el, val) {
                         el.css("top", opts.top + val + i * opts.vgap);
                     }, outerObject);
                 }
             }
         });
     };
-
-    function adjustHeight(item, top, width) {
-        item.css({
-            top: top,
-            left: 0
-        });
-        var itemWidth = item.outerWidth(true);
-        var delta = width - itemWidth;
-        if(delta > 0) {
-            item.width("+=" + delta); //补高
-        } else if(delta < 0) {
-            item.width(width)
-        }
-    }
     //┌────────────────────┐
     //│　　 　north　  　　│
     //├──────┬───────┬─────┤
@@ -162,70 +143,76 @@ define("mass.layout", ["css", "attr"], function($) {
     //border 布局：border 布局也称边界布局，他将页面分隔为 west,east,south,north,center 这五个部分， 我们需要在在其 items 中指定 
     //使用 region 参数为其子元素指定具体位置。 注意：north 和 south 部分只能设置高度（height），
     //west 和 east 部分只能设置宽度（width）。north south west east 区域变大，center 区域就变小了。
+    function adjustBorder(item, left, top, width) {
+        item.css({
+            top: top,
+            left: left
+        });
+        var itemWidth = item.outerWidth(true);
+        var delta = width - itemWidth;
+        if (delta > 0) {
+            item.width("+=" + delta); //补高
+        } else if (delta < 0) {
+            item.width(width)
+        }
+    }
+
     $.fn.layout.border = function(elem, opts) {
-        var items = {};
-        "north,south,west,east,center".replace($.rword, function(name) {
-            items[name] = elem.find("[data-region=" + name + "]:visible");
-            if(!items[name].length) {
-                delete items[name];
-            } else {
-                items[name][0].style.position = "absolute";
+        sandwich(elem, opts, function() {
+            var items = opts.items = {};//重写opts.items
+            "north,south,west,east,center".replace($.rword, function(name) {
+                items[name] = elem.find("[data-region=" + name + "]:visible");
+                if (!items[name].length) {
+                    delete items[name];
+                }
+            });
+            if (!items.center) {
+                throw "必须指定center区域并且让其可见"
             }
-        });
-        if(!items.center) {
-            throw "必须指定center区域并且让其可见"
-        }
-        elem[0].style.position = "relative";
-        var hgap = parseFloat(opts.hgap) || 1;
-        var vgap = parseFloat(opts.vgap) || 1;
-        var h = [],
-            w = [],
-            els = [],
-            outerWidth = 0,
-            outerHeight = 0; //收集中间格子的宽高与元素
-        "west,center,east".replace($.rword, function(name) {
-            if(items[name]) {
-                els.push(items[name]);
-                w.push(parseFloat(items[name].outerWidth(true)));
-                h.push(parseFloat(items[name].outerHeight(true)));
+            var h = [],
+                    w = [],
+                    els = [],
+                    outerLeft = opts.left,
+                    outerTop = opts.top; //收集中间格子的宽高与元素
+            "west,center,east".replace($.rword, function(name) {
+                if (items[name]) {
+                    els.push(items[name]);
+                    w.push(parseFloat(items[name].outerWidth(true)));
+                    h.push(parseFloat(items[name].outerHeight(true)));
+                }
+            });
+            //重设中间格子的left值与高度
+            var maxHeight = Math.max.apply(0, h);
+            for (var i = 0, el; el = els[i]; i++) {
+                el.css("left", outerLeft);
+                var delta = maxHeight - h[i];
+                if (delta) {
+                    el.height("+=" + delta); //补高
+                }
+                outerLeft += w[i] + opts.hgap;
             }
-        });
-        var maxHeight = Math.max.apply(0, h);
-        //重设中间格子的left值与高度
-        for(var i = 0, el; el = els[i]; i++) {
-            var delta = maxHeight - h[i];
-            el.css("left", outerWidth + hgap * i);
-            if(delta) {
-                el.height("+=" + delta); //补高
+            outerLeft -= opts.hgap;//这是北面与南边区域的宽度
+            //重设north区域的top值与宽度
+            var north = items.north;
+            if (north) {
+                adjustBorder(north, opts.left, outerTop, outerLeft);
+                outerTop += north.outerHeight(true) + opts.hgap;
             }
-            outerWidth += w[i];
-        }
-        outerWidth += (w.length - 1) * hgap;
-        //重设north区域的top值与宽度
-        var north = items.north;
-        if(north) {
-            adjustHeight(north, 0, outerWidth);
-            outerHeight = north.outerHeight(true) + vgap;
-        }
-        //重设south区域的top值与宽度
-        var south = items.south;
-        if(south) {
-            adjustHeight(south, outerHeight + maxHeight + vgap, outerWidth);
-        }
-        //重设中间区域的top值
-        els.forEach(function(el) {
-            el.css("top", outerHeight);
+            //重设south区域的top值与宽度
+            var south = items.south;
+            if (south) {
+                adjustBorder(south, opts.left, outerTop + maxHeight + opts.vgap, outerLeft);
+            }
+            //重设中间区域的top值
+            els.forEach(function(el) {
+                el.css("top", outerTop);
+            });
         });
-        //=================================================
-        elem.width(1);
-        elem.width(elem[0].scrollWidth);
-        elem.height(1);
-        elem.height(elem[0].scrollHeight);
     };
 
     function adjuestRow(els, w, opts, top) {
         var left = opts.left;
-        for(var i = 0, el; el = els[i]; i++) {
+        for (var i = 0, el; el = els[i]; i++) {
             el.css({
                 left: left,
                 top: top
@@ -233,21 +220,22 @@ define("mass.layout", ["css", "attr"], function($) {
             left += w[i] + opts.hgap;
         }
         var align = opts.alignment;
-        if(align === "left") return void 0;
+        if (align === "left")
+            return void 0;
         var detal = opts.width - left + opts.hgap;
-        if(align === "center") {
+        if (align === "center") {
             detal = detal / 2;
         } else {
             detal = detal - opts.right;
         }
-        for(i = 0; el = els[i]; i++) {
+        for (i = 0; el = els[i]; i++) {
             el.css("left", "+=" + detal);
         }
     }
     $.fn.layout.flow = function(elem, opts) {
         var children = [],
-            h = [],
-            w = [];
+                h = [],
+                w = [];
         elem[0].style.position = "relative";
         elem.children().each(function(el) {
             el = $(this);
@@ -264,14 +252,14 @@ define("mass.layout", ["css", "attr"], function($) {
             opts[name] = parseFloat(elem.css("padding-" + name));
         });
         var rowElements = [],
-            rowWidths = [],
-            rowHeights = [],
-            delta = 0,
-            top = opts.top,
-            left
-        for(var i = 0, el; el = children[i]; i++) {
+                rowWidths = [],
+                rowHeights = [],
+                delta = 0,
+                top = opts.top,
+                left
+        for (var i = 0, el; el = children[i]; i++) {
             delta += w[i] + opts.hgap;
-            if(delta < opts.width) {
+            if (delta < opts.width) {
                 rowElements.push(el);
                 rowWidths.push(w[i]);
                 rowHeights.push(h[i])
