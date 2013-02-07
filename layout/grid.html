@@ -7,9 +7,13 @@
         <style>
             .grid {
                 overflow: auto;
-                background:yellow;
+                background:blueviolet;
+                border:1px solid #000;
+                padding:4px 4px 4px 4px;
             }
-
+            #grid2{
+                background:#0099FF;
+            }
             .c {
                 background-color: red;
                 border: 1px solid rgb(200,200,200);
@@ -49,7 +53,7 @@
         <p><a href="index.html">返回</a></p>
         <h1>2x2 grid</h1>
 
-        <div data-layout='{"type": "grid", "hgap": 3, "vgap": 3, "cols": 2}' class="grid" id="grid1">
+        <div data-layout='{"type": "grid", "hgap": 4, "vgap": 4, "cols": 2}' class="grid" id="grid1">
             <div class="c">
                 One
             </div>
@@ -61,6 +65,12 @@
             </div>
             <div class="c">
                 Four
+            </div>
+            <div class="c">
+                Five
+            </div>
+            <div class="c">
+                Six
             </div>
         </div>
         <div data-layout='{"type": "grid", "hgap": 3, "vgap": 3, "cols": 3}' class="grid" id="grid2">
