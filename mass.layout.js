@@ -1,18 +1,29 @@
 define("mass.layout", ["css", "attr"], function($) {
 
     $.fn.layout = function(options) {
+
         var opts = $.mix({}, $.fn.layout.defaults, options);
+        if (opts.type == "flow") {
+            opts = $.mix({
+                autoHeight: true,
+                autoWidth: false,
+                type: "flow"
+            }, options || {});
+        }
+
         return this.each(function() {
-            var elem = $(this)
+            var elem = $(this);
             var layout = elem.data('layout');
             var options = layout ? $.mix(opts, layout) : opts;
             $.fn.layout[options.type](elem, options);
         });
     };
     $.fn.layout.defaults = {
-        resize: true,
+        autoHeight: true,
+        autoWidth: true,
         type: 'grid'
     };
+
     //强制每个格子的大小都一样，宽都为最宽的格子的宽，高都为最高的格子的高
     //  cols 一行共有多少列
     //  hgap 每列之间的距离 1
@@ -37,13 +48,25 @@ define("mass.layout", ["css", "attr"], function($) {
             opts[name] = parseFloat(elem.css("padding-" + name));
         });
         callback(elem, opts);
-        elem[0].style.overflow = "hidden"
-        elem.width(1); //通过这种方式完美消息滚动条
-        elem.width(elem[0].scrollWidth - opts.right);
-        elem.height(1);
-        elem.height(elem[0].scrollHeight - opts.bottom);
-    }
 
+        if (opts.autoWidth) {
+            elem[0].style.overflowX = "hidden";
+            elem.width(1); //通过这种方式完美消灭滚动条
+            elem.width(elem[0].scrollWidth - opts.right);
+        }
+        if (opts.autoHeight) {
+            elem[0].style.overflowY = "hidden";
+            elem.height(1);
+            elem.height(elem[0].scrollHeight - opts.bottom);
+        }
+    }
+//如果有autoHeight:true，则panel中的滚动条就不会出现。
+// 
+// 
+//Anchor布局
+//1.容器内的组件要么指定宽度，要么在anchor中同时指定高/宽， 
+//2.anchor值通常只能为负值(指非百分比值)，正值没有意义， 
+//3.anchor必须为字符串值 
     $.fn.layout.grid = function(elem, opts) {
         sandwich(elem, opts, function(delta) {
             var maxWidth = Math.max.apply(0, opts.widths);
@@ -73,8 +96,8 @@ define("mass.layout", ["css", "attr"], function($) {
     function adjustGrid(array, prop, callback, obj) {
         var max = Math.max.apply(0, array.values);
         for (var i = 0, el; el = array[i]; i++) {
-            callback(el, obj[prop])
-            var delta = max - array.values[i]
+            callback(el, obj[prop]);
+            var delta = max - array.values[i];
             if (delta) {
                 el[prop]("+=" + delta); //补高
             }
@@ -152,7 +175,7 @@ define("mass.layout", ["css", "attr"], function($) {
         if (delta > 0) {
             item.width("+=" + delta); //补高
         } else if (delta < 0) {
-            item.width(width)
+            item.width(width);
         }
     }
 
@@ -232,7 +255,7 @@ define("mass.layout", ["css", "attr"], function($) {
         }
     }
     $.fn.layout.flow = function(elem, opts) {
-        var width = elem.width();
+
         sandwich(elem, opts, function() {
             opts.alignment = /left|right|center/i.test(opts.alignment) ? opts.alignment : "left";
             var innerWidth = opts.width = elem.innerWidth();
@@ -260,7 +283,6 @@ define("mass.layout", ["css", "attr"], function($) {
             }
             adjuestFlow(els, opts, top, www);
         });
-        elem.width(width);
 
     };
 
