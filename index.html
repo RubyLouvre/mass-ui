@@ -58,7 +58,12 @@
         <script>
 
             $(function() {
-
+                var body = document.body;
+                for(var i in body){
+                    if(typeof body[i] ==="number"){
+                        console.log(i+"  "+body[i])
+                    }
+                }
                 // console.log(body.contains(body))
             })
         </script>
