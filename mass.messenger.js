@@ -50,7 +50,17 @@ define(["node"], function($) {
             this._messages.push(fn);
         },
         send: function(data) {
-            if (this._hack && data && typeof data === "object") {
+            if (this._hack && data && typeof data !== "string") {
+                //在w3c规范中,data可以是任意数据类型,但IE8-9由于实现得够早,只支持字符串
+                //这时我们就需要用到JSON进行序列化与反序列化
+                //JavaScript primitive, such as a string
+                //object
+                //Array
+                //PixelArray object
+                //ImageData object
+                //Blob
+                //File
+                //ArrayBuffer
                 data = JSON.stringify(data, function(key, val) {
                     if (typeof val === 'function') {
                         return val + '';
