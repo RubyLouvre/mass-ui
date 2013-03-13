@@ -1,6 +1,6 @@
 define(["node"], function($) {
     function Messenger(config) {
-        //win为其他页面的window对象或装载此window对象的iframe元素或其表达式
+        //主页面的target参数应该为iframe元素的CSS表达式
         var win = config.target
         if (typeof win === "string") {
             win = $(win).get(0);
@@ -8,7 +8,7 @@ define(["node"], function($) {
                 win = win.contentWindow;
             }
         } else {
-            win = parent;
+            win = parent;//子窗口的target参数恒为parent,以防不小心访问它的其他属性时报错
         }
         this.win = win;
         this._messages = [];
