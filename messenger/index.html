@@ -32,6 +32,31 @@
         <p>mass messager 组件 by 司徒正美</p>
         <iframe id="iframe"  src="http://www.cnblogs.com/rubylouvre/articles/2957674.html">
         </iframe>
+		<pre>
+父页面
+
+// target 参数为 iframe
+var messenger = new Messenger({
+    target: '#iframe',
+    onmessage: function(msg) {
+        console.log(msg);
+    }
+});
+// 给子页面发消息
+messenger.send('发给子页面的消息');
+
+子页面
+
+// target 参数为 parent
+var messenger = new Messenger({
+    target: parent,
+    onmessage: function(msg) {
+        console.log(msg);
+    }
+});
+// 给父页面发消息
+messenger.send('发给父页面的消息');
+</pre>
 <!--
 //https://github.com/biqing/MessengerJS/blob/master/messenger.js
 //https://github.com/aralejs/messenger/blob/master/src/messenger.js
