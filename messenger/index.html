@@ -1,0 +1,40 @@
+﻿
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="http://files.cnblogs.com/rubylouvre/mass_merge.js"></script>
+        <script>
+            require("messenger,event,ready", function(Messenger, $) {
+                var iframe = $("#iframe");
+                var messager = new Messenger({
+                    target: '#iframe',
+                    onmessage: function(data) {
+                        $.log(data, true)
+                        if(typeof data == "object"){
+                            $.log(data.aaa, true)
+                            $.log(data.fn, true)
+                        }
+                    }
+                });
+                iframe.on("load", function() {
+                    messager.send('发给子页面的消息');
+                });
+
+            })
+
+        </script> 
+
+    </head>
+    <body>
+	        <p><a href="../index.html">返回</a></p>
+
+        <p>mass messager 组件 by 司徒正美</p>
+        <iframe id="iframe"  src="http://www.cnblogs.com/rubylouvre/articles/2957674.html">
+        </iframe>
+<!--
+//https://github.com/biqing/MessengerJS/blob/master/messenger.js
+//https://github.com/aralejs/messenger/blob/master/src/messenger.js
+//-->
+    </body>
+</html>
