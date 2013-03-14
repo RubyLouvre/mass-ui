@@ -98,7 +98,7 @@ define(["node"], function($) {
                     delete this[p];
                 }
             }
-            navigator.messages = void 0;
+            navigator._callbacks = void 0;
         }
     };
     if (!"1"[0]) {//IE6-7
@@ -115,7 +115,7 @@ define(["node"], function($) {
             }
         };
         Messenger.prototype.initForCrossDomain = function() {
-            var fns = navigator.messages = navigator.messages || [];
+            var fns = navigator._callbacks = navigator._callbacks || [];
             var me = this;
             for (var i = 0, fn; fn = this._callbacks[i++]; ) {
                 fns.push(fn);
