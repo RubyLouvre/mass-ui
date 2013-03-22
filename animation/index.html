@@ -1,0 +1,184 @@
+
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script src="../mass_merge.js"></script>
+        <script src="test.js"></script>
+        <style>
+            #ccc {
+                border:1px solid red;
+            }
+            #hide{
+                width:200px;
+                height:200px;
+                background: red;
+                float:left;
+                overflow: auto;
+            }
+            #scroll{
+                width:180px;
+                height:700px;
+                background:#bd362f;
+            }
+            #toggle{
+                width:200px;
+                height:200px;
+                background:orange;
+                float:left;
+            }
+            #color{
+                width:200px;
+                height:200px;
+                background:green;
+                float:left;
+            }
+            #slideToggle{
+                width:200px;
+                height:200px;
+                background:gold;
+                float:left;
+            }
+            #fadeToggle{
+                width:200px;
+                height:200px;
+                background:#a9ea00;
+                float:left;
+            }
+            #puff{
+                width:200px;
+                height:200px;
+                background:violet;
+                float:left;
+            }
+            #rotate{
+                position:relative;
+                margin:10px;
+                width:100px;
+                height:100px;
+                background:red;
+            }
+            .box {
+                color: white;
+                background-color: #333;
+                position: absolute;
+                top: 50px;
+                left: 50px;
+                width: 100px;
+                height: 100px;
+            }
+        </style>
+        <script>
+
+
+        </script> 
+
+    </head>
+    <body>
+        <h2>动画 by 司徒正美 <a href="../index.html">返回</a></h2>
+        <p>
+            <span id="scroll_btn"> scrollTop第一个</span>
+            <span id="toggle_btn"> toggle第二个</span>
+            <span id="slide_btn"> slideToggle第四个</span>
+            <span id="fade_btn"> fadeToggle第五个</span>
+        </p>
+        <div style='height:230px;'>
+            <div id="hide">
+                <div id="scroll">
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                    scrollTop<br/>
+                </div>
+            </div>
+            <div id="toggle">
+
+            </div>
+            <div id="color">
+                点我变色
+            </div>
+            <div id="slideToggle">
+
+            </div>
+            <div id="fadeToggle">
+
+            </div>
+            <div id="puff">
+              点我放大淡出
+            </div>
+        </div>
+
+        <div id="rotate">
+
+        </div>
+        <div style="position:relative;">
+
+            <div class="box">box</div>
+
+        </div>
+        <pre style="margin-top:170px">
+require("fx,more/random,event,ready", function($, random) {
+    var h = $("#hide").click(function() {
+        h.hide(1000, function() {
+            h.css("background", "blue").show(1000);
+        });
+    });
+    $("#toggle_btn").click(function() {
+        $("#toggle").toggle(1000);
+    });
+    var c = $("#color").click(function() {
+        c.fx({
+            background: random.rgb()
+        }, 2000)
+    });
+    $("#slide_btn").click(function() {
+        $("#slideToggle").slideToggle(1000);
+    });
+    $("#scroll_btn").click(function() {
+        $("#hide").fx({
+            scrollTop: 400
+        }, 2500, function() {
+            $("#hide").delay(500).fx({
+                scrollTop: 0
+            })
+        })
+    });
+    $("#fade_btn").click(function() {
+        $("#fadeToggle").fadeToggle(1000)
+    });
+
+
+    $("#puff").click(function() {
+        $("#puff").puff(1000, function(node) {
+            $(node).show()
+        })
+    });
+    $("#rotate").click(function() {
+        $("#rotate").fx({rotate: "+=170"}, 1000)
+    })
+
+
+    $(".box").click(function() {
+        $(".box").fx({
+            width: 200,
+            height: 200,
+            background: "#7CFC00",
+            fontSize: 36,
+            record: 1
+        }, 2000).fx({
+            width: 70,
+            height: 70,
+            background: "red",
+            fontSize: 14,
+            revert: 1
+        }, 2000);
+    })
+})
+        </pre>
+    </body>
+</html>
