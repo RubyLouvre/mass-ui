@@ -1,7 +1,7 @@
 define("draggable", ["$event", "$attr", "$fx"], function($) {
     var topElement = $(document.documentElement),
         //支持触模设备
-        supportTouch = $.support.touch = "createTouch" in document || 'ontouchstart' in window || window.DocumentTouch && document instanceof DocumentTouch,
+        supportTouch = $.support.touch = "ontouchend" in document,
         onstart = supportTouch ? "touchstart" : "mousedown",
         ondrag = supportTouch ? "touchmove" : "mousemove",
         onend = supportTouch ? "touchend" : "mouseup"
