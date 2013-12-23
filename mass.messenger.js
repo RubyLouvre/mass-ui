@@ -160,3 +160,4 @@ define(["node"], function($) {
 });
 //如果想在旧式的标准浏览器支持跨域通信，可以使用window.name;
 
+//ie8的postMessage不支持cookie 不能跨协议(http https) ie9的也是
